@@ -5,21 +5,19 @@ DEPENDENCIES = pydantic mypy flake8
 MAIN = input
 # MAIN = main
 
+# MAP_FILE = maps/easy/01_linear_path.txt
+MAP_FILE = maps/easy/02*
+# MAP_FILE = maps/easy/03*
+
 OBJ = **.py
 
-#BONUS = ft_lists_1_bonus.c ft_lists_2_bonus.c
-
-#B_OBJ = $(BONUS:.c=.o)
-
-INC = codexion.h
-
-DEBUGGER = $(PYTHON) -m pdb
+DEBUGGER = $(PYTHON) pdb
 PYTHON = python3 -m
 
 RM = rm -fr
 
 install:
-	$(PYTHON) -m venv .venv
+	$(PYTHON) venv .venv
 	source .venv/bin/activate
 	pip install $(DEPENDENCIES)
 
@@ -30,10 +28,10 @@ install:
 # 	uv sync
 
 debug:
-	$(DEBUGGER) $(MAIN)
+	$(DEBUGGER) $(MAIN) $(MAP_FILE)
 
 run:
-	$(PYTHON) $(MAIN)
+	$(PYTHON) $(MAIN) $(MAP_FILE)
 
 clean:
 	$(RM) ./__pycache__/ ./.mypy_cache/
