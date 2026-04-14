@@ -16,6 +16,15 @@ def read_map_file(file_name: str) -> DroneMap | Any:
     zones: list[tuple[str, str, Coordinates, dict[str, str]]] = []
     connections: list[tuple[str, str, dict[str, str]]] = []
 
+    i = 0
+    while file_lines[i].startswith("#"):
+        i += 1
+
+    print(file_lines[i])
+
+    if not file_lines[i].startswith("nb_drones:"):
+        raise ValueError("First line must define 'nb_drones'")
+
     for line in file_lines:
         line = line.split("#")[0].strip()
         if not line:

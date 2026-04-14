@@ -11,6 +11,8 @@ class DroneMap():
     nb_drones: int
     zones: list["Zone"]
     connections: list["Connection"]
+    map: list[list["Zone"]]
+    map_corners: tuple["Coordinates", "Coordinates"]
 
     def __init__(self, nb_drones: int,
                  zones: list[tuple[str, str, "Coordinates", dict[str, str]]],
@@ -53,11 +55,13 @@ class DroneMap():
                 if start:
                     raise ValueError(f"Multiple {Hubs.START_HUB} defined")
                 start = True
+                zone.max_drones = self.nb_drones
 
             if zone.hub_type is Hubs.END_HUB:
                 if end:
                     raise ValueError(f"Multiple {Hubs.END_HUB} defined")
                 end = True
+                zone.max_drones = self.nb_drones
 
             if zone.loc in coords_present:
                 raise ValueError("Multiple Zones with the same coordinates:",
@@ -68,6 +72,12 @@ class DroneMap():
                 raise ValueError("Multiple Zones with the same name:",
                                  zone.loc)
             zone_names.update({zone.name})
+
+        max_x = sorted(coords_present, key=lambda c: (c.x))[-1].x
+        min_x = sorted(coords_present, key=lambda c: (c.x))[0].x
+        max_y = sorted(coords_present, key=lambda c: (c.y))[-1].y
+        min_y = sorted(coords_present, key=lambda c: (c.y))[0].y
+        self.map_corners = (Coordinates(min_x, min_y), Coordinates(max_x, max_y))
 
     def set_zones(self,
                   zone_list: list[tuple[str, str, "Coordinates",
@@ -119,8 +129,12 @@ class DroneMap():
                         if connection.end == zone_j.name:
                             zone_i.connections.append(zone_j)
                             zone_j.connections.append(zone_i)
+        self.map = [[None for _ in range(self.map_corners[0].x, self.map_corners[1].x + 1)]
+                    for _ in range(self.map_corners[0].y, self.map_corners[1].y + 1)]
+        for zone in self.zones:
+            self.map[zone.loc.y - self.map_corners[0].y][zone.loc.x - self.map_corners[0].x] = zone
 
-    def get_summary(self) -> dict[str, dict[str, dict[str, Any]]]:
+    def get_summary(self) -> dict[str, dict[str | int, dict[str, Any] | Any]]:
         return {
             "Zones": {
                 v.name: {"hub type": v.hub_type, "loc": v.loc,
@@ -156,6 +170,14 @@ class DroneMap():
                           for index, info in summary['Connections'].items()])
 
         return f"Zones:{sep1}{zones}\nConnections:{sep1}{conn}"
+
+    def print_map(self) -> None:
+        print("Map Dimensions:", self.map_corners[1].x - self.map_corners[0].x + 1,
+              "x", self.map_corners[1].y - self.map_corners[0].y + 1)
+        tab = "    "
+        print()
+        for line in self.map:
+            print(tab.join([f"{zone.name if zone else '--------':8}" for zone in line]))
 
 
 class Hubs(str, Enum):
