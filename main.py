@@ -35,9 +35,9 @@ def main(args: list[str]) -> None:
 
     print()
 
-    # print(drone_map.get_nice_summary())
+    print(drone_map.get_nice_summary())
 
-    drone_map.print_map()
+    # drone_map.print_map()
 
 
 if __name__ == "__main__":

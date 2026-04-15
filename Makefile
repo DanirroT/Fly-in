@@ -5,8 +5,9 @@ DEPENDENCIES = pydantic mypy flake8
 MAIN = main
 
 # MAP_FILE = maps/easy/01_linear_path.txt
-MAP_FILE = maps/easy/02_simple_fork.txt
+# MAP_FILE = maps/easy/02_simple_fork.txt
 # MAP_FILE = maps/easy/03_basic_capacity.txt
+MAP_FILE = maps/challenger/01_the_impossible_dream.txt
 
 OBJ = **.py *.py
 

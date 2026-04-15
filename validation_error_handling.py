@@ -1,4 +1,5 @@
 from typing import Any
+from enum import Enum
 from pydantic_core import ErrorDetails
 
 
@@ -101,11 +102,11 @@ def bool_error(error_type: str, field: str, msg: str, input_raw: bool) -> None:
 #         print("Unknown Error:", msg)
 
 
-def enum_error(error_type: str, field: str, msg: str, input_raw: list,
+def enum_error(error_type: str, field: str, msg: str, input_raw: Enum,
                expected: str | None) -> None:
 
-    print(type(input_raw))
-    print(input_raw)
+    # print(type(input_raw))
+    # print(input_raw)
 
     input_processed = input_raw
 
@@ -119,8 +120,8 @@ def enum_error(error_type: str, field: str, msg: str, input_raw: list,
 def missing_error(error_type: str, field: str, msg: str, input_raw: Any,
                   expected: str | None) -> None:
 
-    print(type(input_raw))
-    print(input_raw)
+    # print(type(input_raw))
+    # print(input_raw)
 
     input_processed = input_raw
 
@@ -149,7 +150,7 @@ def error_processing(error_details: list[ErrorDetails]) -> None:
         if not len(error["loc"]):
             field = None
         else:
-            field = error["loc"][0]
+            field = str(error["loc"][0])
         msg: str = error["msg"]
         input: Any = error["input"]
         get_expected: Any = error.get("ctx")
@@ -164,19 +165,21 @@ def error_processing(error_details: list[ErrorDetails]) -> None:
         if field is None:
             print(msg[len("Value error, "):])
         elif field in ["name", "start", "end"]:
-            str_error(error_type, field, msg, input, expected)
+            str_error(error_type, field, msg, input, expected)  # type: ignore
         elif field in ["duration_minutes", "witness_count"]:
-            int_error(error_type, field, msg, input, expected)
+            int_error(error_type, field, msg, input, expected)  # type: ignore
         elif field in ["signal_strength", "oxygen_level"]:
-            float_error(error_type, field, msg, input, expected)
+            float_error(
+                error_type, field, msg, input, expected)  # type: ignore
         # elif field in ["timestamp"]:
         #     date_error(error_type, field, msg, input, expected)
         elif field in ["is_verified"]:
             bool_error(error_type, field, msg, input)
         elif field in ["zone"]:
-            enum_error(error_type, field, msg, input, expected)
+            enum_error(error_type, field, msg, input, expected)  # type: ignore
         elif error_type in ["missing"]:
-            missing_error(error_type, field, msg, input, expected)
+            missing_error(
+                error_type, field, msg, input, expected)  # type: ignore
 
         else:
             print("Unknown error:", error)

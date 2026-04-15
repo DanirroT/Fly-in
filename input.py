@@ -17,7 +17,7 @@ def read_map_file(file_name: str) -> DroneMap | Any:
     connections: list[tuple[str, str, dict[str, str]]] = []
 
     i = 0
-    while file_lines[i].startswith("#"):
+    while file_lines[i].startswith("#") or not file_lines[i].strip():
         i += 1
 
     print(file_lines[i])
@@ -72,16 +72,16 @@ def read_map_file(file_name: str) -> DroneMap | Any:
                 a, pre_b = conn.strip().split("-")
                 b, *metadata = pre_b.split()
                 if metadata:
-                    if metadata[0][1:] != "[":
+                    if metadata[0][:1] != "[":
                         raise ValueError(
                             "Metadata must be in between Square Brackets\nor\n"
                             f"Detected Junk Data at the end of line\n{line}")
-                    metadata[0] = metadata[0][1:]
-                    if metadata[-1][:-1] != "]":
+                    if metadata[-1][-1:] != "]":
                         raise ValueError(
                             "Metadata must be in between Square Brackets\nor\n"
                             f"Detected Junk Data at the end of line\n{line}")
-                    metadata[-1] = metadata[-1][:-1]
+                    # metadata[0] = metadata[0][:-1]
+                    # metadata[-1] = metadata[-1][1:]
                     meta_dict = str_to_dict_parse(" ".join(metadata), " ", "=")
                 else:
                     meta_dict = {}
@@ -98,7 +98,7 @@ def read_map_file(file_name: str) -> DroneMap | Any:
                 f"Line not according to Any Format\n{line}\n"
             )
 
-    return DroneMap(nb_drones, zones, connections)
+    return DroneMap(nb_drones, zones, connections)  # type: ignore
     # return nb_drones, zones, connections
 
 
