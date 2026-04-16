@@ -12,13 +12,18 @@ def read_map_file(file_name: str) -> DroneMap | Any:
 
     file_lines = file_str.splitlines()
 
-    nb_drones = 0
+    nb_drones: int = 0
     zones: list[tuple[str, str, Coordinates, dict[str, str]]] = []
     connections: list[tuple[str, str, dict[str, str]]] = []
 
-    i = 0
+    file_size: int = len(file_lines)
+
+    i: int = 0
     while file_lines[i].startswith("#") or not file_lines[i].strip():
         i += 1
+        if i >= file_size:
+            raise ValueError(
+                "File is empty or only contains comments/empty lines")
 
     print(file_lines[i])
 
@@ -48,9 +53,8 @@ def read_map_file(file_name: str) -> DroneMap | Any:
                 hub_type, rest = line.split(":", 1)
                 name, x, y, *metadata = rest.split()
                 if metadata:
-                    metadata[0] = metadata[0][1:]
-                    metadata[-1] = metadata[-1][:-1]
-                    meta_dict = str_to_dict_parse(" ".join(metadata), " ", "=")
+                    raw_meta = " ".join(metadata).strip("[]")
+                    meta_dict = str_to_dict_parse(raw_meta, " ", "=")
                 else:
                     meta_dict = {}
                 zones.append((hub_type, name,

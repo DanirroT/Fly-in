@@ -1,8 +1,10 @@
 
 
 import sys
+from pydantic import ValidationError
 
 from input import read_map_file
+from validation_error_handling import error_processing
 
 
 def main(args: list[str]) -> None:
@@ -21,6 +23,9 @@ def main(args: list[str]) -> None:
     except FileNotFoundError as e:
         print(e)
         return
+    except ValidationError as e:
+        error_processing(e.errors())
+        return
     except ValueError as e:
         print(f"Error reading map file: {e}")
         return
@@ -37,7 +42,7 @@ def main(args: list[str]) -> None:
 
     print(drone_map.get_nice_summary())
 
-    # drone_map.print_map()
+    drone_map.print_map()
 
 
 if __name__ == "__main__":

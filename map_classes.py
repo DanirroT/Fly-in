@@ -1,17 +1,15 @@
 from pydantic import (BaseModel, Field, field_validator,
-                      ValidationError, PrivateAttr)  # model_validator
+                      ValidationError, PrivateAttr)
 from typing import NamedTuple, Any
 from enum import Enum
-import sys
-
-from validation_error_handling import error_processing
 
 
 class DroneMap():
     nb_drones: int
     zones: list["Zone"]
+    important_zones: list["Zone"]
     connections: list["Connection"]
-    map: list[list["Zone"]]
+    grid: list[list["Zone"]]
     map_corners: tuple["Coordinates", "Coordinates"]
 
     def __init__(
@@ -25,12 +23,16 @@ class DroneMap():
         try:
             self.set_zones(zones)
         except ValueError as e:
+            if isinstance(e, ValidationError):
+                raise
             raise ValueError("An error has occurred while setting Zones\n"
                              f"Input: {zones}\nError: {e}")
 
         try:
             self.set_connections(connections)
         except ValueError as e:
+            if isinstance(e, ValidationError):
+                raise
             raise ValueError(
                 "An error has occurred while setting Connections\n"
                 f"Input: {connections}\nError: {e}")
@@ -45,39 +47,47 @@ class DroneMap():
 
     def validate_inputs(self) -> None:
 
-        start: bool = False
-        end: bool = False
+        start: Zone | None = None
+        end: Zone | None = None
 
         coords_present: list["Coordinates"] = []
         zone_names: set[str] = set()
 
         for zone in self.zones:
-            if zone.hub_type is Hubs.START_HUB:
+
+            if zone.name in zone_names:
+                raise ValueError(
+                    f"Multiple Zones with the same name: {zone.loc}")
+            zone_names.update({zone.name})
+
+            if zone.hub_type == Hubs.START_HUB:
                 if start:
                     raise ValueError(f"Multiple {Hubs.START_HUB} defined")
-                start = True
+                start = zone
                 zone.max_drones = self.nb_drones
 
-            if zone.hub_type is Hubs.END_HUB:
+            if zone.hub_type == Hubs.END_HUB:
                 if end:
                     raise ValueError(f"Multiple {Hubs.END_HUB} defined")
-                end = True
+                end = zone
                 zone.max_drones = self.nb_drones
 
             if zone.loc in coords_present:
-                raise ValueError("Multiple Zones with the same coordinates:",
-                                 zone.loc)
+                raise ValueError(
+                    f"Multiple Zones with the same coordinates: {zone.loc}")
             coords_present.append(zone.loc)
 
-            if zone.name in zone_names:
-                raise ValueError("Multiple Zones with the same name:",
-                                 zone.loc)
-            zone_names.update({zone.name})
+        if not start:
+            raise ValueError(f"No {Hubs.START_HUB} defined")
+        if not end:
+            raise ValueError(f"No {Hubs.END_HUB} defined")
 
-        max_x = sorted(coords_present, key=lambda c: (c.x))[-1].x
-        min_x = sorted(coords_present, key=lambda c: (c.x))[0].x
-        max_y = sorted(coords_present, key=lambda c: (c.y))[-1].y
-        min_y = sorted(coords_present, key=lambda c: (c.y))[0].y
+        self.important_zones = [start, end]
+
+        max_x = max(c.x for c in coords_present)
+        min_x = min(c.x for c in coords_present)
+        max_y = max(c.y for c in coords_present)
+        min_y = min(c.y for c in coords_present)
         self.map_corners = (Coordinates(min_x, min_y),
                             Coordinates(max_x, max_y))
 
@@ -95,17 +105,14 @@ class DroneMap():
                     zone_dict[key] = metadata[key]
             try:
                 self.zones.append(Zone(**zone_dict))  # type: ignore
-            except ValidationError as e:
-                error_processing(e.errors())
-                sys.exit()
-            except ValueError:
+            except (ValidationError, ValueError):
                 raise
         for zone in self.zones:
             zone.zero_connections()
 
     def set_connections(
             self,
-            conn_list: list[tuple[str, str, "Coordinates", dict[str, str]]]
+            conn_list: list[tuple[str, str, dict[str, int]]]
             ) -> None:
         self.connections = []
         for conn in conn_list:
@@ -118,28 +125,40 @@ class DroneMap():
             try:
                 self.connections.append(
                     Connection(**conn_dict))  # type: ignore
-            except ValidationError as e:
-                error_processing(e.errors())
-                sys.exit()
-            except ValueError:
+            except (ValidationError, ValueError):
                 raise
 
     def connect_zones(self) -> None:
+        zone_lookup = {z.name: z for z in self.zones}
+
         for connection in self.connections:
-            for zone_i in self.zones:
-                if connection.start == zone_i.name:
-                    for zone_j in self.zones:
-                        if connection.end == zone_j.name:
-                            zone_i.add_connection(zone_j)
-                            zone_j.add_connection(zone_i)
-        self.map = [[None for _ in range(self.map_corners[0].x,  # type: ignore
-                                         self.map_corners[1].x + 1)]
-                    for _ in range(self.map_corners[0].y,
-                                   self.map_corners[1].y + 1)]
+            zone_i = zone_lookup.get(connection.start)
+            zone_j = zone_lookup.get(connection.end)
+
+            if not zone_i or not zone_j:
+                raise ValueError("Invalid connection")
+
+            zone_i.add_connection(zone_j)
+            zone_j.add_connection(zone_i)
+
+        # for connection in self.connections:
+        #     for zone_i in self.zones:
+        #         if connection.start == zone_i.name:
+        #             for zone_j in self.zones:
+        #                 if connection.end == zone_j.name:
+        #                     zone_i.add_connection(zone_j)
+        #                     zone_j.add_connection(zone_i)
+
+        self.grid = [[
+            None for _ in range(self.map_corners[0].x,  # type: ignore
+                                self.map_corners[1].x + 1)
+            ]
+            for _ in range(self.map_corners[0].y,
+                           self.map_corners[1].y + 1)]
         for zone in self.zones:
             y_ = zone.loc.y - self.map_corners[0].y
             x_ = zone.loc.x - self.map_corners[0].x
-            self.map[y_][x_] = zone
+            self.grid[y_][x_] = zone
 
     def get_summary(self) -> dict[str, dict[str | int, dict[str, Any] | Any]]:
         return {
@@ -165,6 +184,14 @@ class DroneMap():
         sep1 = "\n\t"
         sep2 = "\n\t\t"
         sep3 = "\n\t\t\t"
+        important_info = (
+            f"Map Size  : {self.map_corners[1].x - self.map_corners[0].x + 1} "
+            f"x {self.map_corners[1].y - self.map_corners[0].y + 1}\n"
+            f"Start Zone: {self.important_zones[0].name} "
+            f"at {self.important_zones[0].loc}\n"
+            f"End Zone  : {self.important_zones[1].name} "
+            f"at {self.important_zones[1].loc}\n\n"
+        )
         zones = sep1.join([
             f"{name}: "
             f"{sep2.join(f'{i:10}:  {z}' for i, z in list(info.items())[:-1])}"
@@ -176,7 +203,7 @@ class DroneMap():
         conn = sep1.join([f"{index}: {sep2.join(map(str, info.items()))}"
                           for index, info in summary['Connections'].items()])
 
-        return f"Zones:{sep1}{zones}\nConnections:{sep1}{conn}"
+        return f"{important_info}Zones:{sep1}{zones}\nConnections:{sep1}{conn}"
 
     def print_map(self) -> None:
         print("Map Dimensions:",
@@ -184,7 +211,7 @@ class DroneMap():
               self.map_corners[1].y - self.map_corners[0].y + 1)
         tab = "    "
         print()
-        for line in self.map:
+        for line in self.grid:
             print(tab.join([f"{zone.name if zone else '--------':8}"
                             for zone in line]))
 
@@ -194,12 +221,18 @@ class Hubs(str, Enum):
     HUB = "hub"
     END_HUB = "end_hub"
 
+    def __str__(self) -> str:
+        return self.value
+
 
 class ZoneType(str, Enum):
     NORMAL = "normal"
     BLOCKED = "blocked"
     RESTRICTED = "restricted"
     PRIORITY = "priority"
+
+    def __str__(self) -> str:
+        return self.value
 
 
 class Coordinates(NamedTuple):
@@ -212,12 +245,13 @@ class Coordinates(NamedTuple):
 
 class Zone(BaseModel):
     name: str = Field(min_length=1)
-    hub_type: Hubs = Field(min_length=1)
+    hub_type: Hubs = Field()
     loc: Coordinates = Field()
     zone: ZoneType = Field(default=ZoneType.NORMAL)
     color: str = Field(min_length=1, default="none")
     max_drones: int = Field(gt=0, default=1)
-    _zone_connections: list["Zone"] = PrivateAttr(default_factory=list["Zone"])
+    _occupancy: int = PrivateAttr(default_factory=int)
+    _zone_connections: list["Zone"] = PrivateAttr(default_factory=list)
 
     @field_validator("loc", mode="before")
     @classmethod
@@ -232,10 +266,28 @@ class Zone(BaseModel):
         self._zone_connections = []
 
     def get_connections(self) -> list["Zone"]:
-        return self._zone_connections
+        return list(self._zone_connections)
 
     def add_connection(self, add_zone: "Zone") -> None:
-        self._zone_connections.append(add_zone)
+        if add_zone is self:
+            raise ValueError(
+                f"A Zone cannot be connected to itself: {self.name}")
+        if add_zone not in self._zone_connections:
+            self._zone_connections.append(add_zone)
+        else:
+            raise ValueError(f"Duplicate connection between "
+                             f"{self.name} and {add_zone.name}")
+
+    def zero_occupancy(self) -> None:
+        self._occupancy = 0
+
+    def get_occupancy(self) -> int:
+        return self._occupancy
+
+    def update_occupancy(self, delta: int) -> None:
+        self._occupancy += delta
+        if self._occupancy < 0:
+            raise ValueError("Occupancy cannot be negative:", self.name)
 
     """
     @field_validator("metadata", mode="before")
