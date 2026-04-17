@@ -4,12 +4,17 @@ import sys
 from pydantic import ValidationError
 
 from input import read_map_file
+from drone_class import DroneManager
+from visualizer import TerminalVisualizer, WindowedVisualizer
 from validation_error_handling import error_processing
+
+
+def terminal_clear() -> None:
+    print("\033[H\033[J", end="")
 
 
 def main(args: list[str]) -> None:
 
-    # file_name = "maps/easy/01_linear_path.txt"
     if len(args) == 1:
         print("No Map Given. Try Again")
         return
@@ -44,6 +49,23 @@ def main(args: list[str]) -> None:
 
     drone_map.print_map()
 
+    input()
+
+    terminal_clear()
+
+    manager = DroneManager(drone_map, TerminalVisualizer())
+
+    print(manager, len(manager.drones))
+
+    print([zone.name for zone in manager.usable_zones])
+
+    print()
+
+    manager.drone_map.print_map()
+
 
 if __name__ == "__main__":
-    main(sys.argv)
+    try:
+        main(sys.argv)
+    except KeyboardInterrupt:
+        print("The program has been forcefully stopped")

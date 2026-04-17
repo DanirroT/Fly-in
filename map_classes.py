@@ -7,15 +7,16 @@ from enum import Enum
 class DroneMap():
     nb_drones: int
     zones: list["Zone"]
-    important_zones: list["Zone"]
+    start_zone: "Zone"
+    end_zone: "Zone"
     connections: list["Connection"]
     grid: list[list["Zone"]]
     map_corners: tuple["Coordinates", "Coordinates"]
 
     def __init__(
             self, nb_drones: int,
-            zones: list[tuple[str, str, "Coordinates", dict[str, str]]],
-            connections: list[tuple[str, str, "Coordinates", dict[str, str]]]
+            zones: list[tuple[str, str, "Coordinates", dict[str, str | int]]],
+            connections: list[tuple[str, str, dict[str, int]]]
             ) -> None:
 
         self.nb_drones = nb_drones
@@ -82,7 +83,8 @@ class DroneMap():
         if not end:
             raise ValueError(f"No {Hubs.END_HUB} defined")
 
-        self.important_zones = [start, end]
+        self.start_zone = start
+        self.end_zone = end
 
         max_x = max(c.x for c in coords_present)
         min_x = min(c.x for c in coords_present)
@@ -93,13 +95,13 @@ class DroneMap():
 
     def set_zones(self,
                   zone_list: list[tuple[str, str, "Coordinates",
-                                  dict[str, str]]]
+                                  dict[str, str | int]]]
                   ) -> None:
         self.zones = []
         for zone in zone_list:
             metadata = zone[-1]
-            zone_dict = {k: v for k, v in
-                         zip(["hub_type", "name", "loc"], zone[:-1])}
+            zone_dict: dict[str, str | Coordinates | int] = {
+                k: v for k, v in zip(["hub_type", "name", "loc"], zone[:-1])}
             for key in ["zone", "color", "max_drones"]:
                 if key in metadata:
                     zone_dict[key] = metadata[key]
@@ -117,8 +119,8 @@ class DroneMap():
         self.connections = []
         for conn in conn_list:
             metadata = conn[-1]
-            conn_dict = {k: v for k, v in
-                         zip(["start", "end"], conn[:-1])}
+            conn_dict: dict[str, str | int] = {
+                k: v for k, v in zip(["start", "end"], conn[:-1])}
             for key in ["max_link_capacity"]:
                 if key in metadata:
                     conn_dict[key] = metadata[key]
@@ -149,8 +151,8 @@ class DroneMap():
         #                     zone_i.add_connection(zone_j)
         #                     zone_j.add_connection(zone_i)
 
-        self.grid = [[
-            None for _ in range(self.map_corners[0].x,  # type: ignore
+        self.grid = [[  # type: ignore
+            None for _ in range(self.map_corners[0].x,
                                 self.map_corners[1].x + 1)
             ]
             for _ in range(self.map_corners[0].y,
@@ -187,10 +189,10 @@ class DroneMap():
         important_info = (
             f"Map Size  : {self.map_corners[1].x - self.map_corners[0].x + 1} "
             f"x {self.map_corners[1].y - self.map_corners[0].y + 1}\n"
-            f"Start Zone: {self.important_zones[0].name} "
-            f"at {self.important_zones[0].loc}\n"
-            f"End Zone  : {self.important_zones[1].name} "
-            f"at {self.important_zones[1].loc}\n\n"
+            f"Start Zone: {self.start_zone.name} "
+            f"at {self.start_zone.loc}\n"
+            f"End Zone  : {self.end_zone.name} "
+            f"at {self.end_zone.loc}\n\n"
         )
         zones = sep1.join([
             f"{name}: "
@@ -251,7 +253,7 @@ class Zone(BaseModel):
     color: str = Field(min_length=1, default="none")
     max_drones: int = Field(gt=0, default=1)
     _occupancy: int = PrivateAttr(default_factory=int)
-    _zone_connections: list["Zone"] = PrivateAttr(default_factory=list)
+    _zone_connections: list["Zone"] = PrivateAttr(default_factory=list["Zone"])
 
     @field_validator("loc", mode="before")
     @classmethod

@@ -1,3 +1,15 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
+#    Updated: 2026/04/17 16:50:40 by dmota-ri         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 NAME = Fly-in
 
 DEPENDENCIES = pydantic mypy flake8
@@ -18,6 +30,8 @@ PYTHON = python3 -m
 
 RM = rm -fr
 
+.ONESHELL:
+
 run:
 	$(PYTHON) $(MAIN) $(MAP_FILE)
 
@@ -29,7 +43,7 @@ install: $(VENV)
 	pip install $(DEPENDENCIES)
 
 $(VENV):
-	$(PYTHON) -m venv $(VENV)
+	$(PYTHON) venv $(VENV)
 
 # install:
 # 	curl -LsSf https://astral.sh/uv/install.sh | sh
