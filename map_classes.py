@@ -4,13 +4,132 @@ from typing import NamedTuple, Any
 from enum import Enum
 
 
+class Hubs(str, Enum):
+    START_HUB = "start_hub"
+    HUB = "hub"
+    END_HUB = "end_hub"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class ZoneType(str, Enum):
+    NORMAL = "normal"
+    BLOCKED = "blocked"
+    RESTRICTED = "restricted"
+    PRIORITY = "priority"
+
+    def __str__(self) -> str:
+        return self.value
+
+
+class Coordinates(NamedTuple):
+    x: int
+    y: int
+
+    def __str__(self) -> str:
+        return f"x: {self.x}, y: {self.y}"
+
+
+class Zone(BaseModel):
+    name: str = Field(min_length=1)
+    hub_type: Hubs = Field()
+    loc: Coordinates = Field()
+    zone: ZoneType = Field(default=ZoneType.NORMAL)
+    color: str = Field(min_length=1, default="none")
+    max_drones: int = Field(gt=0, default=1)
+    _occupancy: int = PrivateAttr(default_factory=int)
+    _zone_connections: dict["Zone", int] = PrivateAttr(
+        default_factory=dict["Zone", int])
+
+    @field_validator("loc", mode="before")
+    @classmethod
+    def parse_coordinates(cls, v: str | Coordinates) -> Coordinates:
+        """Parse coordinate strings like 'x,y' into coordinate tuples."""
+        if isinstance(v, str):
+            x, y = v.split(",")
+            return Coordinates(int(x), int(y))
+        return v
+
+    def zero_connections(self) -> None:
+        self._zone_connections = {}
+
+    def get_connections(self) -> dict["Zone", int]:
+        return dict(self._zone_connections)
+
+    def add_connection(self, add_zone: "Zone", link_capacity: int) -> None:
+        if add_zone is self:
+            raise ValueError(
+                f"A Zone cannot be connected to itself: {self.name}")
+        if add_zone not in self._zone_connections.keys():
+            self._zone_connections[add_zone] = link_capacity
+        else:
+            raise ValueError(f"Duplicate connection between "
+                             f"{self.name} and {add_zone.name}")
+
+    def zero_occupancy(self) -> None:
+        self._occupancy = 0
+
+    def get_occupancy(self) -> int:
+        return self._occupancy
+
+    def update_occupancy(self, delta: int) -> None:
+        self._occupancy += delta
+        if self._occupancy < 0:
+            raise ValueError("Occupancy cannot be negative:", self.name)
+
+    def __hash__(self):
+        return hash(self.name)
+
+    """
+    @field_validator("metadata", mode="before")
+    def parse_metadata(cls, v: list[str] | dict[str, str | int]
+                       ) -> dict[str, str | int]:
+        if isinstance(v, list):
+            for cell in v:
+
+                cell_split = cell.split(",")
+
+                if len(cell_split) != 2:
+                    raise ValueError(
+                        f"{cell} "
+                        "is not formatted correctly.\n"
+                        "\tCorrect formatting is: <data>=<value>"
+                    )
+
+                if cell_split[0] not in ["zone", "color", "max_drones"]:
+
+                try:
+                    x = int(cell_split[0])
+                    y = int(cell_split[1])
+                except ValueError as e:
+                    raise ValueError(
+                        "cell's 2 values must be Integers. "
+                        f"{cell}\nValueError: {e}"
+                    )
+
+            return {"zone": zone if zone else "normal",
+                    "color": color if color else "none",
+                    "max_drones": max_drones if max_drones else 1,
+                    }
+
+        return v
+        """
+
+
+class Connection(BaseModel):
+    start: str = Field(min_length=1)
+    end: str = Field(min_length=1)
+    max_link_capacity: int = Field(gt=0, default=1)
+
+
 class DroneMap():
     nb_drones: int
-    zones: list["Zone"]
-    start_zone: "Zone"
-    end_zone: "Zone"
+    zones: list[Zone]
+    start_zone: Zone
+    end_zone: Zone
     connections: list["Connection"]
-    grid: list[list["Zone"]]
+    grid: list[list[Zone]]
     map_corners: tuple["Coordinates", "Coordinates"]
 
     def __init__(
@@ -140,8 +259,8 @@ class DroneMap():
             if not zone_i or not zone_j:
                 raise ValueError("Invalid connection")
 
-            zone_i.add_connection(zone_j)
-            zone_j.add_connection(zone_i)
+            zone_i.add_connection(zone_j, connection.max_link_capacity)
+            zone_j.add_connection(zone_i, connection.max_link_capacity)
 
         # for connection in self.connections:
         #     for zone_i in self.zones:
@@ -168,8 +287,8 @@ class DroneMap():
                 v.name: {"hub type": v.hub_type, "loc": v.loc,
                          "zone type": v.zone, "color": v.color,
                          "max_drones": v.max_drones, "connections": {
-                            i: c
-                            for i, c in enumerate(v.get_connections())
+                            i: d
+                            for i, d in enumerate(v.get_connections())
                          }
                          }
                 for v in self.zones
@@ -214,120 +333,5 @@ class DroneMap():
         tab = "    "
         print()
         for line in self.grid:
-            print(tab.join([f"{zone.name if zone else '--------':8}"
+            print(tab.join([f"{zone.name if zone else '-' * 16:16}"
                             for zone in line]))
-
-
-class Hubs(str, Enum):
-    START_HUB = "start_hub"
-    HUB = "hub"
-    END_HUB = "end_hub"
-
-    def __str__(self) -> str:
-        return self.value
-
-
-class ZoneType(str, Enum):
-    NORMAL = "normal"
-    BLOCKED = "blocked"
-    RESTRICTED = "restricted"
-    PRIORITY = "priority"
-
-    def __str__(self) -> str:
-        return self.value
-
-
-class Coordinates(NamedTuple):
-    x: int
-    y: int
-
-    def __str__(self) -> str:
-        return f"x: {self.x}, y: {self.y}"
-
-
-class Zone(BaseModel):
-    name: str = Field(min_length=1)
-    hub_type: Hubs = Field()
-    loc: Coordinates = Field()
-    zone: ZoneType = Field(default=ZoneType.NORMAL)
-    color: str = Field(min_length=1, default="none")
-    max_drones: int = Field(gt=0, default=1)
-    _occupancy: int = PrivateAttr(default_factory=int)
-    _zone_connections: list["Zone"] = PrivateAttr(default_factory=list["Zone"])
-
-    @field_validator("loc", mode="before")
-    @classmethod
-    def parse_coordinates(cls, v: str | Coordinates) -> Coordinates:
-        """Parse coordinate strings like 'x,y' into coordinate tuples."""
-        if isinstance(v, str):
-            x, y = v.split(",")
-            return Coordinates(int(x), int(y))
-        return v
-
-    def zero_connections(self) -> None:
-        self._zone_connections = []
-
-    def get_connections(self) -> list["Zone"]:
-        return list(self._zone_connections)
-
-    def add_connection(self, add_zone: "Zone") -> None:
-        if add_zone is self:
-            raise ValueError(
-                f"A Zone cannot be connected to itself: {self.name}")
-        if add_zone not in self._zone_connections:
-            self._zone_connections.append(add_zone)
-        else:
-            raise ValueError(f"Duplicate connection between "
-                             f"{self.name} and {add_zone.name}")
-
-    def zero_occupancy(self) -> None:
-        self._occupancy = 0
-
-    def get_occupancy(self) -> int:
-        return self._occupancy
-
-    def update_occupancy(self, delta: int) -> None:
-        self._occupancy += delta
-        if self._occupancy < 0:
-            raise ValueError("Occupancy cannot be negative:", self.name)
-
-    """
-    @field_validator("metadata", mode="before")
-    def parse_metadata(cls, v: list[str] | dict[str, str | int]
-                       ) -> dict[str, str | int]:
-        if isinstance(v, list):
-            for cell in v:
-
-                cell_split = cell.split(",")
-
-                if len(cell_split) != 2:
-                    raise ValueError(
-                        f"{cell} "
-                        "is not formatted correctly.\n"
-                        "\tCorrect formatting is: <data>=<value>"
-                    )
-
-                if cell_split[0] not in ["zone", "color", "max_drones"]:
-
-                try:
-                    x = int(cell_split[0])
-                    y = int(cell_split[1])
-                except ValueError as e:
-                    raise ValueError(
-                        "cell's 2 values must be Integers. "
-                        f"{cell}\nValueError: {e}"
-                    )
-
-            return {"zone": zone if zone else "normal",
-                    "color": color if color else "none",
-                    "max_drones": max_drones if max_drones else 1,
-                    }
-
-        return v
-        """
-
-
-class Connection(BaseModel):
-    start: str = Field(min_length=1)
-    end: str = Field(min_length=1)
-    max_link_capacity: int = Field(gt=0, default=1)

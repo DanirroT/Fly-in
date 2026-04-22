@@ -1,6 +1,7 @@
 from map_classes import DroneMap, Zone, ZoneType, Hubs
 from visualizer import Visualizer
 import random
+from time import sleep
 
 
 class DroneManager():
@@ -21,27 +22,59 @@ class DroneManager():
                                  if zone.zone != ZoneType.BLOCKED
                                  and zone.hub_type != Hubs.START_HUB])
 
+        self.drone_map.start_zone.update_occupancy(self.drone_map.nb_drones)
+
     def sim_turn(self) -> None:
+        connections = drone.loc.get_connections()
         for drone in self.drones:
             if drone.clear_buff():
                 continue
+            if drone.loc is self.drone_map.end_zone:
+                continue
+
+            drone_dest: Zone | None = None
 
             for _ in range(3):
                 drone_dest = drone.make_decision(self.usable_zones)
-                if drone_dest == drone.last_zone:
-                    self.usable_zones.remove(drone.loc)
+                if (drone_dest and (not
+                        (drone_dest.max_drones - drone_dest.get_occupancy() or
+                         drone.loc.get_connections()[drone_dest]))):
+                    drone_dest = None
+                if drone_dest:
                     break
 
-            # move = True
-
-            if not (drone_dest.max_drones - drone_dest.get_occupancy()):
-                drone_dest = None
+            # if not drone_dest:
+            #     raise IndexError(
+            #         "Something went wrong when getting a Drone Destination"
+            #         f" in {drone.index} currently in {drone.loc}")
 
             if drone_dest:
                 drone.move_to_zone(drone_dest)
 
-    def prep_sim(self) -> None:
-        self.drone_map.start_zone.update_occupancy(self.drone_map.nb_drones)
+        self.turn += 1
+
+    def run_sim(self):
+        print("Start Sim")
+        for drone in self.drones:
+            print(drone.loc, drone.loc.get_occupancy())
+        print()
+        while (self.drone_map.end_zone.get_occupancy()
+               < self.drone_map.nb_drones):
+            sleep(0.5)
+            self.sim_turn()
+            print()
+            print()
+            print("Turn:", self.turn)
+            for drone in self.drones:
+                if drone.loc == self.drone_map.end_zone:
+                    print("Finished!")
+                    continue
+                print(drone.loc.name, "  \t", drone.loc.loc,
+                      "\t", drone.loc.get_occupancy())
+            print()
+
+    # def prep_sim(self) -> None:
+    #     self.drone_map.start_zone.update_occupancy(self.drone_map.nb_drones)
 
     """
         dests: list[Zone] = [
@@ -103,17 +136,19 @@ class Drone():
         normal_zones: list[Zone] = []
         priority_zones: list[Zone] = []
         restricted_zones: list[Zone] = []
-        zone_connections: list[Zone] = self.loc.get_connections()
+        zone_connections: dict[Zone, int] = self.loc.get_connections()
         if usable_zones is None:
             usable_zones = set([zone for zone in zone_connections
                                 if (zone.zone != ZoneType.BLOCKED
                                     and zone.hub_type != Hubs.START_HUB)])
         if len(zone_connections) == 1:
-            return zone_connections[0]
-        back_index: int = zone_connections.index(self.last_zone)
-        if len(zone_connections) == 2:
-            return zone_connections[1 - back_index]
-        for zone in zone_connections:
+            return list(zone_connections.keys())[0]
+        non_back: dict[Zone, int] = {
+            zone: cap for zone, cap in zone_connections.items()
+            if zone != self.last_zone}
+        if len(non_back) == 1:
+            return list(non_back.keys())[0]
+        for zone in non_back.keys():
             if zone.hub_type == Hubs.END_HUB:
                 return zone
             if (zone not in usable_zones or

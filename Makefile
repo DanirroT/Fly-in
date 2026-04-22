@@ -6,7 +6,7 @@
 #    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
-#    Updated: 2026/04/17 16:50:40 by dmota-ri         ###   ########.fr        #
+#    Updated: 2026/04/22 21:39:08 by dmota-ri         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -17,8 +17,9 @@ DEPENDENCIES = pydantic mypy flake8
 MAIN = main
 
 # MAP_FILE = maps/easy/01_linear_path.txt
-MAP_FILE = maps/easy/02_simple_fork.txt
+# MAP_FILE = maps/easy/02_simple_fork.txt
 # MAP_FILE = maps/easy/03_basic_capacity.txt
+MAP_FILE = maps/hard/01_maze_nightmare.txt
 # MAP_FILE = maps/challenger/01_the_impossible_dream.txt
 
 OBJ = **.py *.py

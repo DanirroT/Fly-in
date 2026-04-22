@@ -62,10 +62,18 @@ def main(args: list[str]) -> None:
     print()
 
     manager.drone_map.print_map()
+    print()
+    print()
+
+    manager.run_sim()
+
+    print()
+    print()
+    print("END SIM")
 
 
 if __name__ == "__main__":
     try:
         main(sys.argv)
     except KeyboardInterrupt:
-        print("The program has been forcefully stopped")
+        print("\rThe program has been forcefully stopped")

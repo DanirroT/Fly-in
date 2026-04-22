@@ -25,8 +25,6 @@ def read_map_file(file_name: str) -> DroneMap | Any:
             raise ValueError(
                 "File is empty or only contains comments/empty lines")
 
-    print(file_lines[i])
-
     if not file_lines[i].startswith("nb_drones:"):
         raise ValueError("First line must define 'nb_drones'")
 

@@ -159,9 +159,9 @@ def error_processing(error_details: list[ErrorDetails]) -> None:
         expected: list[Any] = (list(get_expected.values())[0]
                                if get_expected else get_expected)
 
-        print()
-        print("unpacked:", error_type, field, msg, input, expected)
-        print()
+        # print()
+        # print("unpacked:", error_type, field, msg, input, expected)
+        # print()
         if field is None:
             print(msg[len("Value error, "):])
         elif field in ["name", "start", "end"]:
