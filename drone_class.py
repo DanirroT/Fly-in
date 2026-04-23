@@ -25,7 +25,7 @@ class DroneManager():
         self.drone_map.start_zone.update_occupancy(self.drone_map.nb_drones)
 
     def sim_turn(self) -> None:
-        connections = drone.loc.get_connections()
+        # connections = drone.loc.get_connections()
         for drone in self.drones:
             if drone.clear_buff():
                 continue

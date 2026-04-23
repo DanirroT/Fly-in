@@ -6,13 +6,13 @@
 #    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
-#    Updated: 2026/04/22 21:39:08 by dmota-ri         ###   ########.fr        #
+#    Updated: 2026/04/23 14:57:16 by dmota-ri         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
 NAME = Fly-in
 
-DEPENDENCIES = pydantic mypy flake8
+DEPENDENCIES = pydantic mypy flake8 pygame
 
 MAIN = main
 

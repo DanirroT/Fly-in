@@ -2,6 +2,8 @@ from abc import ABC, abstractmethod
 
 from map_classes import Zone
 
+import pygame
+
 
 class Visualizer(ABC):
 
