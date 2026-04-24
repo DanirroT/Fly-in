@@ -38,9 +38,9 @@ class DroneManager():
 
             for _ in range(3):
                 drone_dest = drone.make_decision(self.usable_zones)
-                if (drone_dest and (not
-                        (drone_dest.max_drones - drone_dest.get_occupancy() or
-                         drone.loc.get_connections()[drone_dest]))):
+                if (drone_dest and
+                    (not (drone_dest.max_drones - drone_dest.get_occupancy() or
+                     drone.loc.get_connections()[drone_dest]))):
                     drone_dest = None
                 if drone_dest:
                     break

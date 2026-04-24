@@ -44,8 +44,8 @@ class Colors(str, Enum):
 
     ORANGE = "orange"
     PURPLE = "purple"
-    LIME = "lime"
-    LIGHTBLUE = "lightblue"
+    # LIME = "lime"
+    # LIGHTBLUE = "lightblue"
 
     GOLD = "gold"
     MAROON = "maroon"
@@ -63,6 +63,14 @@ class Colors(str, Enum):
 class Coordinates(NamedTuple):
     x: int
     y: int
+
+    def __str__(self) -> str:
+        return f"x: {self.x}, y: {self.y}"
+
+
+class CoordinatesFloat(NamedTuple):
+    x: float
+    y: float
 
     def __str__(self) -> str:
         return f"x: {self.x}, y: {self.y}"

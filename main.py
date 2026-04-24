@@ -51,16 +51,16 @@ def main(args: list[str]) -> None:
 
     terminal_clear()
 
-    manager = DroneManager(drone_map, TerminalVisualizer)
+    manager = DroneManager(drone_map, WindowedVisualizer)
 
     print()
     print()
 
-    # manager.run_sim()
+    manager.run_sim()
 
     print()
     print()
-    # print("END SIM")
+    print("END SIM")
 
 
 if __name__ == "__main__":
