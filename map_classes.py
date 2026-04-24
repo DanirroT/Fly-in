@@ -23,6 +23,43 @@ class ZoneType(str, Enum):
         return self.value
 
 
+class Colors(str, Enum):
+    RED = "red"
+    BLUE = "blue"
+    GREEN = "green"
+    DARKRED = "darkred"
+    DARKBLUE = "darkblue"
+    DARKGREEN = "darkgreen"
+
+    BLACK = "black"
+    DARKGREY = "darkgrey"
+    GREY = "grey"
+    LIGHTGREY = "lightgrey"
+    WHITE = "white"
+    BROWN = "brown"
+
+    YELLOW = "yellow"
+    CYAN = "cyan"
+    MAGENTA = "magenta"
+
+    ORANGE = "orange"
+    PURPLE = "purple"
+    LIME = "lime"
+    LIGHTBLUE = "lightblue"
+
+    GOLD = "gold"
+    MAROON = "maroon"
+    CRIMSON = "crimson"
+    PINK = "pink"
+    VIOLET = "violet"
+
+    RAINBOW = "rainbow"
+    NONE = "none"
+
+    def __str__(self) -> str:
+        return self.value
+
+
 class Coordinates(NamedTuple):
     x: int
     y: int
@@ -36,7 +73,7 @@ class Zone(BaseModel):
     hub_type: Hubs = Field()
     loc: Coordinates = Field()
     zone: ZoneType = Field(default=ZoneType.NORMAL)
-    color: str = Field(min_length=1, default="none")
+    color: Colors = Field(default=Colors.NONE)
     max_drones: int = Field(gt=0, default=1)
     _occupancy: int = PrivateAttr(default_factory=int)
     _zone_connections: dict["Zone", int] = PrivateAttr(
@@ -321,7 +358,8 @@ class DroneMap():
                            in list(info.values())[-1].items())}"""
             for name, info in summary['Zones'].items()
         ])
-        conn = sep1.join([f"{index}: {sep2.join(map(str, info.items()))}"
+        conn = sep1.join([f"{index}: {info["start"]}\t--  {info["end"]} "
+                          f"\tmax: {info["max_link_capacity"]}"
                           for index, info in summary['Connections'].items()])
 
         return f"{important_info}Zones:{sep1}{zones}\nConnections:{sep1}{conn}"

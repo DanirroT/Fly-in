@@ -175,7 +175,7 @@ def error_processing(error_details: list[ErrorDetails]) -> None:
         #     date_error(error_type, field, msg, input, expected)
         elif field in ["is_verified"]:
             bool_error(error_type, field, msg, input)
-        elif field in ["zone"]:
+        elif field in ["zone", "color"]:
             enum_error(error_type, field, msg, input, expected)  # type: ignore
         elif error_type in ["missing"]:
             missing_error(

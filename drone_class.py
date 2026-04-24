@@ -2,6 +2,7 @@ from map_classes import DroneMap, Zone, ZoneType, Hubs
 from visualizer import Visualizer
 import random
 from time import sleep
+from typing import Type
 
 
 class DroneManager():
@@ -11,10 +12,11 @@ class DroneManager():
     visualizer: Visualizer
     turn: int = 0
 
-    def __init__(self, drone_map: DroneMap, visualizer: Visualizer) -> None:
+    def __init__(self, drone_map: DroneMap, visualizer: Type[Visualizer]
+                 ) -> None:
         self.drone_map = drone_map
 
-        self.visualizer = visualizer
+        self.visualizer = visualizer(self.drone_map)
 
         self.drones = [Drone(i, self.drone_map.start_zone)
                        for i in range(self.drone_map.nb_drones)]
