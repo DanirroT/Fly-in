@@ -75,7 +75,7 @@ class WindowedVisualizer(Visualizer):
 
     def __init__(self, map: DroneMap) -> None:
         super().__init__(map)
-        self.dimensions = Coordinates(3000, 700)
+        self.dimensions = Coordinates(1200, 700)
         self.working_dimensions = Coordinates(self.dimensions.x - 100,
                                               self.dimensions.y - 100)
 
@@ -94,11 +94,15 @@ class WindowedVisualizer(Visualizer):
         pygame.display.update()
 
     def build_map(self) -> None:
-        top_right = self.drone_map.map_corners[0]
-        bottom_left = self.drone_map.map_corners[1]
-        delta_x = bottom_left.x - top_right.x
-        delta_y = bottom_left.y - top_right.y
-        middle = CoordinatesFloat(delta_x/2, delta_y/2)
+        bottom_right, top_left = self.drone_map.map_corners
+        delta_x = top_left.x - bottom_right.x
+        delta_y = top_left.y - bottom_right.y
+        print("Map delta_x:", top_left.x, bottom_right.x, delta_x, sep=" | ")
+        print("Map delta_y:", bottom_right.y, top_left.y, delta_y, sep=" | ")
+        print("Map Corners:", bottom_right, top_left)
+        _y = float(delta_y/2 % 1)
+        middle = CoordinatesFloat(delta_x/2, _y)
+        print(middle)
 
         for connection in self.drone_map.connections:
 
@@ -113,6 +117,8 @@ class WindowedVisualizer(Visualizer):
                         round(((zone.loc.y - middle.y) * 120)
                               + self.dimensions.y/2)
                     ]
+                    # print(zone.loc, end=", ")
+                    # print([start_coords, end_coords])
                 if zone.name == connection.end:
                     end_coords = [
                         round(((zone.loc.x - middle.x) * 120)
@@ -120,17 +126,25 @@ class WindowedVisualizer(Visualizer):
                         round(((zone.loc.y - middle.y) * 120)
                               + self.dimensions.y/2)
                     ]
+                    # print(zone.loc, end=", ")
+                    # print([start_coords, end_coords])
                 if start_coords and end_coords:
                     break
 
+            # print(" -> ", [start_coords, end_coords])
+
             pygame.draw.line(
                 self.screen, (0, 0, 0), start_coords, end_coords, 5)
+
+        # print()
+        # print(middle)
+        # print()
 
         for zone in self.drone_map.zones:
             print(zone.loc, end=" -> ")
             coords_list = [
                 round(((zone.loc.x - middle.x) * 120) + self.dimensions.x/2),
-                round(((zone.loc.y + middle.y) * 120) + self.dimensions.y/2)
+                round(((zone.loc.y - middle.y) * 120) + self.dimensions.y/2)
             ]
             print(coords_list)
             text1 = self.font.render(zone.name, True, (5, 5, 5))

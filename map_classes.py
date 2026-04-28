@@ -366,8 +366,8 @@ class DroneMap():
                            in list(info.values())[-1].items())}"""
             for name, info in summary['Zones'].items()
         ])
-        conn = sep1.join([f"{index}: {info["start"]}\t--  {info["end"]} "
-                          f"\tmax: {info["max_link_capacity"]}"
+        conn = sep1.join([f"{index}: {info['start']}\t--  {info['end']} "
+                          f"\tmax: {info['max_link_capacity']}"
                           for index, info in summary['Connections'].items()])
 
         return f"{important_info}Zones:{sep1}{zones}\nConnections:{sep1}{conn}"

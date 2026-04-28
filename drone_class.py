@@ -1,3 +1,5 @@
+import sys
+
 from map_classes import DroneMap, Zone, ZoneType, Hubs
 from visualizer import Visualizer
 import random
@@ -26,6 +28,84 @@ class DroneManager():
 
         self.drone_map.start_zone.update_occupancy(self.drone_map.nb_drones)
 
+    def get_path(self) -> list[Zone]:
+        # all_data: list[dict[str, Zone | dict[Zone, int]]] = [
+        #     {"current_zone": self.drone_map.start_zone, "path": {}}]
+        pq: list[dict[int, Zone]] = [{0: self.drone_map.start_zone}]
+        dist: dict[int, Zone] = {zone: sys.maxsize for zone in self.drone_map.zones}
+        visited: set[Zone] = set()
+        dist[self.drone_map.start_zone] = 0
+        while pq:
+            current_capacity, current_zone = pop(pq).items()
+            if current_zone in visited:
+                continue
+            visited.add(current_zone)
+            if current_zone.zone == ZoneType.BLOCKED:
+                weight = sys.maxsize
+            if (current_zone.zone == ZoneType.NORMAL or
+                current_zone.zone == ZoneType.PRIORITY):
+                weight = 1
+            if current_zone.zone == ZoneType.RESTRICTED:
+                weight = 2
+            for conn, weight in current_zone.get_connections().items():
+                if pq.get(conn) > current_weight + weight:
+                    dist[conn] = current_weight + weight
+                pq.append({dist[conn]: conn})
+                print(pq)
+                print(dist)
+
+        dist.sort(key=lambda x: list(x.keys())[0])
+
+        print(dist)
+
+
+    def turn_forward(self) -> None:
+        # connections = drone.loc.get_connections()
+
+        self.turn += 1
+
+
+    def turn_back(self) -> None:
+        # connections = drone.loc.get_connections()
+
+        self.turn -= 1
+
+    def run_program(self) -> None:
+        import pygame
+        print("Start Sim")
+
+        run = True
+
+        while run:
+            for event in pygame.event.get():
+
+                if event.type == pygame.QUIT:
+                    print("Quit")
+                    run = False
+
+
+
+    """
+
+        for drone in self.drones:
+            print(drone.loc, drone.loc.get_occupancy())
+        print()
+        while (self.drone_map.end_zone.get_occupancy()
+               < self.drone_map.nb_drones):
+            sleep(0.5)
+            self.sim_turn()
+            print()
+            print()
+            print("Turn:", self.turn)
+            for drone in self.drones:
+                if drone.loc == self.drone_map.end_zone:
+                    print("Finished!")
+                    continue
+                print(drone.loc.name, "  \t", drone.loc.loc,
+                      "\t", drone.loc.get_occupancy())
+            print()
+
+
     def sim_turn(self) -> None:
         # connections = drone.loc.get_connections()
         for drone in self.drones:
@@ -45,38 +125,12 @@ class DroneManager():
                 if drone_dest:
                     break
 
-            # if not drone_dest:
-            #     raise IndexError(
-            #         "Something went wrong when getting a Drone Destination"
-            #         f" in {drone.index} currently in {drone.loc}")
-
             if drone_dest:
                 drone.move_to_zone(drone_dest)
 
         self.turn += 1
 
-    def run_sim(self):
-        print("Start Sim")
-        for drone in self.drones:
-            print(drone.loc, drone.loc.get_occupancy())
-        print()
-        while (self.drone_map.end_zone.get_occupancy()
-               < self.drone_map.nb_drones):
-            sleep(0.5)
-            self.sim_turn()
-            print()
-            print()
-            print("Turn:", self.turn)
-            for drone in self.drones:
-                if drone.loc == self.drone_map.end_zone:
-                    print("Finished!")
-                    continue
-                print(drone.loc.name, "  \t", drone.loc.loc,
-                      "\t", drone.loc.get_occupancy())
-            print()
-
-    # def prep_sim(self) -> None:
-    #     self.drone_map.start_zone.update_occupancy(self.drone_map.nb_drones)
+    """
 
     """
         dests: list[Zone] = [
@@ -134,6 +188,7 @@ class Drone():
         self.last_zone = start
         self.buffer = None
 
+    """
     def make_decision(self, usable_zones: set[Zone] | None = None) -> Zone:
         normal_zones: list[Zone] = []
         priority_zones: list[Zone] = []
@@ -188,11 +243,12 @@ class Drone():
         weights = (
             [1] * priority_len + [0.5] * normal_len + [0.1] * restricted_len)
         weights = [w * p for w, p
-                   in zip(weights, make_positional_weights(len(final_zones)))]
+                in zip(weights, make_positional_weights(len(final_zones)))]
 
         print("weights:", weights)
 
         return random.choices(final_zones, weights=weights)[0]
+    """
 
     def move_to_zone(self, dest: Zone) -> None:
 

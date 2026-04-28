@@ -1,7 +1,6 @@
 from map_classes import DroneMap, Zone, Connection, Hubs, ZoneType, Coordinates
-from input import read_map_file
+from input import read_map_file, str_to_dict_parse
 from validation_error_handling import error_processing
-from utils import str_to_dict_parse
 
 __all__: list[str] = [
     "DroneMap", "Zone", "Connection", "Hubs", "ZoneType", "Coordinates",

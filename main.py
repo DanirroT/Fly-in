@@ -56,10 +56,11 @@ def main(args: list[str]) -> None:
     print()
     print()
 
-    manager.run_sim()
+    manager.run_program()
 
     print()
     print()
+    manager.visualizer.terminate()
     print("END SIM")
 
 
