@@ -131,7 +131,8 @@ class WindowedVisualizer():
                     break
 
             # print(" -> ", [start_coords, end_coords])
-
+            if not start_coords or not end_coords:
+                raise TypeError("Somehow while drawing, there was an error")
             pygame.draw.line(
                 self.screen, (0, 0, 0), start_coords, end_coords, 5)
 
@@ -168,6 +169,7 @@ class WindowedVisualizer():
                     self.screen, (0, 0, 255),
                     [top_left, bottom_center, bottom_left])
             else:
+                color_val = (150, 150, 150)
                 for vals_key in color_vals.keys():
                     if (zone.color == vals_key.lower() and vals_key not in
                             str_exclusion and vals_key not in enum_exclusion):
