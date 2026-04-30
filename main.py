@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from input import read_map_file
 from drone_class import DroneManager
-from visualizer import TerminalVisualizer, WindowedVisualizer, terminal_clear
+from visualizer import WindowedVisualizer, terminal_clear
 from validation_error_handling import error_processing
 
 
@@ -43,7 +43,9 @@ def main(args: list[str]) -> None:
 
     print(drone_map.get_nice_summary())
 
-    print("Name,", file_name, end="\t")
+    print()
+
+    print("Name:", file_name, end="\t")
 
     drone_map.print_map()
 
@@ -52,9 +54,6 @@ def main(args: list[str]) -> None:
     terminal_clear()
 
     manager = DroneManager(drone_map, WindowedVisualizer)
-
-    print()
-    print()
 
     manager.run_program()
 

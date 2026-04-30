@@ -6,7 +6,7 @@
 #    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
-#    Updated: 2026/04/28 20:35:52 by dmota-ri         ###   ########.fr        #
+#    Updated: 2026/04/30 16:49:17 by dmota-ri         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -20,9 +20,11 @@ MAIN = main
 # MAP_FILE = maps/easy/02_simple_fork.txt
 # MAP_FILE = maps/easy/03_basic_capacity.txt
 
+# MAP_FILE = maps/easy/02_simple_fork_copy.txt
+
 # MAP_FILE = maps/medium/01_dead_end_trap.txt
-MAP_FILE = maps/medium/02_circular_loop.txt
-# MAP_FILE = maps/medium/03_priority_puzzle.txt
+# MAP_FILE = maps/medium/02_circular_loop.txt
+MAP_FILE = maps/medium/03_priority_puzzle.txt
 
 # MAP_FILE = maps/hard/01_maze_nightmare.txt
 # MAP_FILE = maps/hard/02_capacity_hell.txt

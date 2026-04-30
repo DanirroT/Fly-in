@@ -126,6 +126,9 @@ class Zone(BaseModel):
     def __hash__(self):
         return hash(self.name)
 
+    def __str__(self) -> str:
+        return f"{self.name} in {self.loc}"
+
     """
     @field_validator("metadata", mode="before")
     def parse_metadata(cls, v: list[str] | dict[str, str | int]
@@ -166,6 +169,9 @@ class Connection(BaseModel):
     start: str = Field(min_length=1)
     end: str = Field(min_length=1)
     max_link_capacity: int = Field(gt=0, default=1)
+
+    def __str__(self) -> str:
+        return f"{self.start} to {self.end}"
 
 
 class DroneMap():

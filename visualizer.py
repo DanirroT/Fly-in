@@ -1,8 +1,7 @@
-from abc import ABC, abstractmethod
+# from abc import ABC, abstractmethod
 
 from map_classes import Zone
 from map_classes import Coordinates, CoordinatesFloat, DroneMap, Colors
-from input import read_map_file
 from enum import Enum
 
 
@@ -14,20 +13,20 @@ def terminal_clear() -> None:
     print("\033[H\033[J", end="")
 
 
-class Visualizer(ABC):
+# class Visualizer(ABC):
 
-    drone_map: DroneMap
+#     drone_map: DroneMap
 
-    def __init__(self, drone_map: DroneMap) -> None:
-        self.drone_map = drone_map
+#     def __init__(self, drone_map: DroneMap) -> None:
+#         self.drone_map = drone_map
 
-    @abstractmethod
-    def animate_turn(self, start_zone: Zone, end_zone: Zone) -> None:
-        pass
+#     @abstractmethod
+#     def animate_turn(self, start_zone: Zone, end_zone: Zone) -> None:
+#         pass
 
-    @abstractmethod
-    def terminate(self) -> None:
-        pass
+#     @abstractmethod
+#     def terminate(self) -> None:
+#         pass
 
 
 class ColorsVals(tuple[int, int, int], Enum):
@@ -66,7 +65,7 @@ class ColorsVals(tuple[int, int, int], Enum):
         return str(self.value)
 
 
-class WindowedVisualizer(Visualizer):
+class WindowedVisualizer():
 
     # screen: Surface
     dimensions: Coordinates
@@ -74,7 +73,7 @@ class WindowedVisualizer(Visualizer):
     # font: Font
 
     def __init__(self, map: DroneMap) -> None:
-        super().__init__(map)
+        self.drone_map = map
         self.dimensions = Coordinates(1200, 700)
         self.working_dimensions = Coordinates(self.dimensions.x - 100,
                                               self.dimensions.y - 100)
@@ -97,12 +96,12 @@ class WindowedVisualizer(Visualizer):
         bottom_right, top_left = self.drone_map.map_corners
         delta_x = top_left.x - bottom_right.x
         delta_y = top_left.y - bottom_right.y
-        print("Map delta_x:", top_left.x, bottom_right.x, delta_x, sep=" | ")
-        print("Map delta_y:", bottom_right.y, top_left.y, delta_y, sep=" | ")
-        print("Map Corners:", bottom_right, top_left)
+        # print("Map delta_x:", top_left.x, bottom_right.x, delta_x, sep=" | ")
+        # print("Map delta_y:", bottom_right.y, top_left.y, delta_y, sep=" | ")
+        # print("Map Corners:", bottom_right, top_left)
         _y = float(delta_y/2 % 1)
         middle = CoordinatesFloat(delta_x/2, _y)
-        print(middle)
+        # print(middle)
 
         for connection in self.drone_map.connections:
 
@@ -141,12 +140,12 @@ class WindowedVisualizer(Visualizer):
         # print()
 
         for zone in self.drone_map.zones:
-            print(zone.loc, end=" -> ")
+            # print(zone.loc, end=" -> ")
             coords_list = [
                 round(((zone.loc.x - middle.x) * 120) + self.dimensions.x/2),
                 round(((zone.loc.y - middle.y) * 120) + self.dimensions.y/2)
             ]
-            print(coords_list)
+            # print(coords_list)
             text1 = self.font.render(zone.name, True, (5, 5, 5))
             color_vals = ColorsVals.__dict__
             str_exclusion = str.__dict__
@@ -188,41 +187,43 @@ class WindowedVisualizer(Visualizer):
         pygame.quit()
 
 
-class TerminalVisualizer(Visualizer):
+# class TerminalVisualizer(Visualizer):
 
-    def __init__(self, map: DroneMap) -> None:
-        super().__init__(map)
-        terminal_clear()
+#     def __init__(self, map: DroneMap) -> None:
+#         super().__init__(map)
+#         terminal_clear()
 
-    def animate_turn(self, start_zone: Zone, end_zone: Zone) -> None:
-        pass
+#     def animate_turn(self, start_zone: Zone, end_zone: Zone) -> None:
+#         pass
 
-    def terminate(self) -> None:
-        pass
+#     def terminate(self) -> None:
+#         pass
 
 
-if __name__ == "__main__":
+# from input import read_map_file
 
-    # file_name = "maps/easy/01_linear_path.txt"
-    file_name = "maps/hard/01_maze_nightmare.txt"
-    # file_name = "maps/challenger/01_the_impossible_dream.txt"
+# if __name__ == "__main__":
 
-    drone_map = read_map_file(file_name)
+#     # file_name = "maps/easy/01_linear_path.txt"
+#     file_name = "maps/hard/01_maze_nightmare.txt"
+#     # file_name = "maps/challenger/01_the_impossible_dream.txt"
 
-    visualizer = WindowedVisualizer(drone_map)
+#     drone_map = read_map_file(file_name)
 
-    run = True
+#     visualizer = WindowedVisualizer(drone_map)
 
-    while run:
+#     run = True
 
-        # Iterating over all the events received from
-        # pygame.event.get()
-        for event in pygame.event.get():
+#     while run:
 
-            # If the type of the event is quit
-            # then setting the run variable to false
-            if event.type == pygame.QUIT:
-                print("Quit")
-                run = False
+#         # Iterating over all the events received from
+#         # pygame.event.get()
+#         for event in pygame.event.get():
 
-    visualizer.terminate()
+#             # If the type of the event is quit
+#             # then setting the run variable to false
+#             if event.type == pygame.QUIT:
+#                 print("Quit")
+#                 run = False
+
+#     visualizer.terminate()
