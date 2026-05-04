@@ -44,7 +44,7 @@ class Colors(str, Enum):
 
     ORANGE = "orange"
     PURPLE = "purple"
-    # LIME = "lime"
+    LIME = "lime"
     # LIGHTBLUE = "lightblue"
 
     GOLD = "gold"

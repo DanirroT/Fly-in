@@ -1,7 +1,7 @@
 # from abc import ABC, abstractmethod
 
 from map_classes import Zone
-from map_classes import Coordinates, CoordinatesFloat, DroneMap, Colors
+from map_classes import Coordinates, DroneMap, Colors
 from enum import Enum
 
 
@@ -50,7 +50,7 @@ class ColorsVals(tuple[int, int, int], Enum):
 
     ORANGE = (255, 127, 0)
     PURPLE = (127, 0, 255)
-    # LIME = (255, 0, 0)
+    LIME = (255, 100, 100)
     # LIGHTBLUE = (255, 0, 0)
 
     GOLD = (255, 207, 64)
@@ -69,62 +69,85 @@ class WindowedVisualizer():
 
     # screen: Surface
     dimensions: Coordinates
-    working_dimensions: Coordinates
+    margins: Coordinates = Coordinates(100, 50)
+    menu_hight: int
+    # working_dimensions: Coordinates
+    stars: list[Coordinates]
     # font: Font
 
     def __init__(self, map: DroneMap) -> None:
         self.drone_map = map
+        self.menu_hight = 100
         self.dimensions = Coordinates(1200, 700)
-        self.working_dimensions = Coordinates(self.dimensions.x - 100,
-                                              self.dimensions.y - 100)
+        # self.working_dimensions = Coordinates(self.dimensions.x - 100,
+        #                                       self.dimensions.y - 100)
 
         pygame.init()
         pygame.font.init()
-        self.screen = pygame.display.set_mode(self.dimensions)
         pygame.display.set_caption("Fly-in")
-        self.screen.fill((3, 20, 56))
         self.font = pygame.font.SysFont('freesanbold.ttf', 30)
+        self.stars = []
         for _ in range(50):
-            pygame.draw.circle(self.screen, (255, 255, 255),
-                               [random.choice(range(self.dimensions.x)),
-                                random.choice(range(self.dimensions.y))], 2, 0)
-
+            self.stars.append(Coordinates(
+                random.choice(range(120)),
+                random.choice(range(100)))
+            )
         self.build_map()
         pygame.display.update()
 
+    def pos_to_display(self, pos: Coordinates, middle: Coordinates,
+                       scale: Coordinates) -> Coordinates:
+
+        return Coordinates(
+            round(((pos.x - middle.x) * scale.x) + self.dimensions.x/2),
+            round(((pos.y - middle.y) * scale.y - (self.menu_hight/2))
+                  + self.dimensions.y/2)
+        )
+
     def build_map(self) -> None:
+        self.screen = pygame.display.set_mode(self.dimensions,
+                                              pygame.RESIZABLE)
+        self.screen.fill((3, 20, 56))
+
         bottom_right, top_left = self.drone_map.map_corners
-        delta_x = top_left.x - bottom_right.x
-        delta_y = top_left.y - bottom_right.y
+        delta_x = top_left.x - bottom_right.x + 1
+        delta_y = top_left.y - bottom_right.y + 1
         # print("Map delta_x:", top_left.x, bottom_right.x, delta_x, sep=" | ")
         # print("Map delta_y:", bottom_right.y, top_left.y, delta_y, sep=" | ")
         # print("Map Corners:", bottom_right, top_left)
         _y = float(delta_y/2 % 1)
-        middle = CoordinatesFloat(delta_x/2, _y)
-        # print(middle)
+        middle_map = Coordinates(round(delta_x/2), round(_y))
+        # middle_display = Coordinates(round(self.dimensions.x/2),
+        #                              round(self.dimensions.y/2))
+        # print(middle_map)
+
+        scale_x = (self.dimensions.x - 2 * self.margins.x) / delta_x
+        scale_y = ((self.dimensions.y - 2 * (self.margins.y + self.menu_hight))
+                   / delta_y)
+
+        scale = Coordinates(round(scale_x), round(scale_y))
+        # print(scale)
+
+        for star in self.stars:
+            star_loc = Coordinates(round((star.x * self.dimensions.x) / 120),
+                                   round((star.y * self.dimensions.y) / 100))
+            pygame.draw.circle(self.screen, (255, 255, 255),
+                               star_loc, 2, 0)
 
         for connection in self.drone_map.connections:
 
-            start_coords: None | list[int] = None
-            end_coords: None | list[int] = None
+            start_coords: None | Coordinates = None
+            end_coords: None | Coordinates = None
 
             for zone in self.drone_map.zones:
                 if zone.name == connection.start:
-                    start_coords = [
-                        round(((zone.loc.x - middle.x) * 120)
-                              + self.dimensions.x/2),
-                        round(((zone.loc.y - middle.y) * 120)
-                              + self.dimensions.y/2)
-                    ]
+                    start_coords = self.pos_to_display(
+                        zone.loc, middle_map, scale)
                     # print(zone.loc, end=", ")
                     # print([start_coords, end_coords])
                 if zone.name == connection.end:
-                    end_coords = [
-                        round(((zone.loc.x - middle.x) * 120)
-                              + self.dimensions.x/2),
-                        round(((zone.loc.y - middle.y) * 120)
-                              + self.dimensions.y/2)
-                    ]
+                    end_coords = self.pos_to_display(
+                        zone.loc, middle_map, scale)
                     # print(zone.loc, end=", ")
                     # print([start_coords, end_coords])
                 if start_coords and end_coords:
@@ -137,27 +160,47 @@ class WindowedVisualizer():
                 self.screen, (0, 0, 0), start_coords, end_coords, 5)
 
         # print()
-        # print(middle)
+        # print(middle_map)
+
         # print()
+        # print(middle_map_display)
+        # print()
+        # print(middle_display)
+        # print()
+        # pygame.draw.line(self.screen, (0, 0, 0),
+        #                  self.dimensions, (0, 0), 5)
+        # pygame.draw.line(self.screen, (0, 0, 0),
+        #                  (0, self.dimensions.y), (self.dimensions.x, 0), 5)
+
+        # pygame.draw.line(self.screen, (0, 0, 0),
+        #                  (self.dimensions.x, middle_display.y),
+        #                  (0, middle_display.y), 5)
+        # pygame.draw.line(self.screen, (0, 0, 0),
+        #                  (middle_display.x, self.dimensions.y),
+        #                  (middle_display.x, 0), 5)
+
+        # pygame.draw.line(self.screen, (0, 0, 0),
+        #                  (self.dimensions.x, middle_map_display.y),
+        #                  (0, middle_map_display.y), 5)
+        # pygame.draw.line(self.screen, (0, 0, 0),
+        #                  (middle_map_display.x, self.dimensions.y),
+        #                  (middle_map_display.x, 0), 5)
 
         for zone in self.drone_map.zones:
             # print(zone.loc, end=" -> ")
-            coords_list = [
-                round(((zone.loc.x - middle.x) * 120) + self.dimensions.x/2),
-                round(((zone.loc.y - middle.y) * 120) + self.dimensions.y/2)
-            ]
+            coords_list = self.pos_to_display(zone.loc, middle_map, scale)
             # print(coords_list)
             text1 = self.font.render(zone.name, True, (5, 5, 5))
             color_vals = ColorsVals.__dict__
             str_exclusion = str.__dict__
             enum_exclusion = Enum.__dict__
             if zone.color == Colors.RAINBOW:
-                top_right = [coords_list[0] - 15, coords_list[1] + 15]
-                top_center = [coords_list[0], coords_list[1] + 15]
-                top_left = [coords_list[0] + 15, coords_list[1] + 15]
-                bottom_right = [coords_list[0] - 15, coords_list[1] - 15]
-                bottom_center = [coords_list[0], coords_list[1] - 15]
-                bottom_left = [coords_list[0] + 15, coords_list[1] - 15]
+                top_right = [coords_list.x - 15, coords_list.y + 15]
+                top_center = [coords_list.x, coords_list.y + 15]
+                top_left = [coords_list.x + 15, coords_list.y + 15]
+                bottom_right = [coords_list.x - 15, coords_list.y - 15]
+                bottom_center = [coords_list.x, coords_list.y - 15]
+                bottom_left = [coords_list.x + 15, coords_list.y - 15]
 
                 pygame.draw.polygon(
                     self.screen, (255, 0, 0),
@@ -168,6 +211,7 @@ class WindowedVisualizer():
                 pygame.draw.polygon(
                     self.screen, (0, 0, 255),
                     [top_left, bottom_center, bottom_left])
+                text1 = self.font.render(zone.name, True, ColorsVals.PINK)
             else:
                 color_val = (150, 150, 150)
                 for vals_key in color_vals.keys():
@@ -175,14 +219,41 @@ class WindowedVisualizer():
                             str_exclusion and vals_key not in enum_exclusion):
                         color_val = color_vals[vals_key]
                         break
+                text1 = self.font.render(zone.name, True, color_val)
                 pygame.draw.circle(self.screen, color_val,
                                    coords_list, 15, 0)
-            coords_list[1] += 40 + ((zone.loc.x % 2) * 25)
+            text_offset = coords_list.y + 40 + ((zone.loc.x % 2) * 25)
             text_rect = text1.get_rect()
-            text_rect.center = (coords_list[0], coords_list[1])
+            text_rect.center = (coords_list.x, text_offset)
             self.screen.blit(text1, text_rect)
 
-    def animate_turn(self, start_zone: Zone, end_zone: Zone) -> None:
+        menu_space = pygame.draw.rect(
+            self.screen, (150, 150, 150),
+            (0, self.dimensions.y-self.menu_hight,
+             self.dimensions.x, self.menu_hight)
+        )
+        menu_str = (
+            "Use arrows <- / -> to cycle Turns\n"
+            "Use Q or Esc to Quit"
+        )
+        menu_text = self.font.render(menu_str, True, (0, 0, 0))
+        self.screen.blit(menu_text, menu_space, menu_space)
+
+    def resize(self, w: int, h: int) -> None:
+        self.dimensions = Coordinates(w, h)
+
+        # print("resize to:", w, h)
+
+        # self.working_dimensions = Coordinates(
+        #     self.dimensions.x - 100,
+        #     self.dimensions.y - 100
+        # )
+        self.build_map()
+        pygame.display.update()
+        # self.redraw()
+
+    def update_display(self, drone_locs: list[Zone]) -> None:
+        print("\n".join(map(str, drone_locs)))
         pygame.display.update()
 
     def terminate(self) -> None:

@@ -56,10 +56,6 @@ def main(args: list[str]) -> None:
     manager = DroneManager(drone_map, WindowedVisualizer)
 
     manager.run_program()
-
-    print()
-    print()
-    manager.visualizer.terminate()
     print("END SIM")
 
 

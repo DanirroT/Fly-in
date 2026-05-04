@@ -33,10 +33,10 @@ class DroneManager():
         #     {"current_zone": self.drone_map.start_zone, "path": {}}]
         pq: list[dict[int, Zone]] = [{0: self.drone_map.start_zone}]
 
-        dist: dict[Zone, int] = {zone: sys.maxsize
-                                 for zone in self.drone_map.zones}
+        dist: dict[Zone, list[int]] = {zone: [sys.maxsize, 0]
+                                       for zone in self.drone_map.zones}
         visited: set[Zone] = set()
-        dist[self.drone_map.start_zone] = 0
+        dist[self.drone_map.start_zone] = [0, 0]
 
         # self.drone_map.print_map()
         # print()
@@ -62,9 +62,14 @@ class DroneManager():
             if current_zone.zone == ZoneType.RESTRICTED:
                 weight = 2
             for conn, weight in current_zone.get_connections().items():
-                if dist.get(conn, 0) > current_weight + weight:
-                    dist[conn] = current_weight + weight
-                pq.append({dist[conn]: conn})
+                if dist.get(conn, [0, 0])[0] > current_weight + weight:
+                    priority = dist.get(conn, [0, 0])[1]
+                    dist[conn] = [current_weight + weight, priority]
+                if (conn.zone is ZoneType.PRIORITY and
+                        dist.get(conn, [0, 0])[1] > current_weight + weight):
+                    dist[conn] = [dist[conn][0], dist[conn][1] +
+                                  int(conn.zone is ZoneType.PRIORITY)]
+                pq.append({dist[conn][0]: conn})
             # print([str(zone) for _dict in pq for zone in _dict.values()])
             # print()
             # print("\n".join([f"{str(zone)}: {val}"
@@ -82,8 +87,8 @@ class DroneManager():
         return_path: list[Zone] = [current_zone]
 
         while current_zone != self.drone_map.start_zone:
-            current_zone = min(current_zone.get_connections(), key=lambda c:
-                               (dist[c], c.zone != ZoneType.PRIORITY))
+            current_zone = min(current_zone.get_connections(),
+                               key=lambda c: dist[c])
             return_path.append(current_zone)
             # print('current_zone', current_zone)
             # print()
@@ -118,67 +123,49 @@ class DroneManager():
 
         return return_list
 
-    def turn_forward(self, zone_path: list[Zone], cap_path: list[int]) -> None:
-        for drone in self.drones:
-            if drone.clear_buff():
-                continue
-            if drone.loc == self.drone_map.end_zone:
-                continue
+    def calc_drone_pos(self, zone_path: list[Zone], cap_path: list[int]
+                       ) -> list[list[Zone]]:
+        turn_list_output: list[list[Zone]] = [[self.drone_map.start_zone]
+                                              * self.drone_map.nb_drones]
+        drone_list: list[Drone] = self.drones.copy()
+        turn = 0
+        while drone_list:
+            append_list: list[Zone] = []
+            # print(list(map(str, drone_list)))
+            for drone in drone_list.copy():
+                if drone.clear_buff():
+                    continue
 
-            current_index = zone_path.index(drone.loc)
+                current_index = zone_path.index(drone.loc)
 
-            next_zone = zone_path[current_index + 1]
-            if (next_zone in drone.loc.get_connections() and
-                    next_zone.max_drones - next_zone.get_occupancy() > 0):
-                drone.move_to_zone(next_zone)
-                print(
-                    f"Drone {drone.index} moved forward to {next_zone.name}",
-                    "with capacity",
-                    f"{next_zone.get_occupancy()}/{next_zone.max_drones}")
+                next_zone = zone_path[current_index + 1]
+                if (next_zone in drone.loc.get_connections() and
+                        next_zone.max_drones - next_zone.get_occupancy() > 0):
+                    drone.move_to_zone(next_zone)
+                    # print(
+                    #     f"Drone {drone.index} moved forward to",
+                    #     f"{next_zone.name} with capacity",
+                    #     f"{next_zone.get_occupancy()}/{next_zone.max_drones}")
 
-        for drone in self.drones:
-            if drone.loc == self.drone_map.end_zone:
-                print("Finished!")
-                continue
-            print(drone.loc.name, "  \t", drone.loc.loc,
-                  "\t", drone.loc.get_occupancy())
-        print()
-        print()
-        # self.visualizer.animate_turn()
+                if drone.loc == self.drone_map.end_zone:
+                    drone_list.remove(drone)
 
-        self.turn += 1
-        print("Turn Forward -", self.turn)
+            for drone in self.drones:
+                append_list.append(drone.loc)
+                if drone.loc == self.drone_map.end_zone:
+                    # print("Finished!")
+                    continue
+                # print(drone.loc.name, "  \t", drone.loc.loc,
+                #       "\t", drone.loc.get_occupancy())
+            # print()
+            # print()
+            # print("\n - ".join(map(str, append_list)))
+            # print()
+            # print()
+            turn_list_output.append(append_list)
+            turn += 1
 
-    def turn_back(self, zone_path: list[Zone], cap_path: list[int]) -> None:
-        # moved_to: dict[Zone, int] = {zone:  for zone in self.drone_map.zones}
-        for drone in self.drones[::-1]:
-            if drone.buffer:
-                drone.buffer = None
-                continue
-            if drone.loc == self.drone_map.start_zone:
-                continue
-
-            current_index = zone_path.index(drone.loc)
-
-            next_zone = zone_path[current_index - 1]
-            if (next_zone in drone.loc.get_connections() and
-                    next_zone.max_drones - next_zone.get_occupancy() > 0):
-                drone.move_to_zone(next_zone)
-                print(
-                    f"Drone {drone.index} moved back to {next_zone.name}",
-                    "with capacity",
-                    f"{next_zone.get_occupancy()}/{next_zone.max_drones}")
-
-        for drone in self.drones:
-            if drone.loc == self.drone_map.end_zone:
-                print("Finished!")
-                continue
-            print(drone.loc.name, "  \t", drone.loc.loc,
-                  "\t", drone.loc.get_occupancy())
-        # self.visualizer.animate_turn()
-
-        self.turn -= 1
-        print("Turn Back -", self.turn)
+        return turn_list_output
 
     def run_program(self) -> None:
         import pygame
@@ -187,28 +174,77 @@ class DroneManager():
         zone_path = self.get_zone_path()
         cap_path = self.get_cap_path(zone_path)
 
-        print("Zone Path:", [zone for zone in zone_path])
-        print("Cap Path:", cap_path)
+        # print()
+        # print("Zone Path:", [zone for zone in zone_path])
+        # print()
+        # print("Cap Path:", cap_path)
+
+        turn_list_output = self.calc_drone_pos(zone_path, cap_path)
+        turns = len(turn_list_output)
+
+        # print()
+        # print(f"turn_list_output: size: {turns}\n",
+        #       "\n\n".join("\n".join(map(str, turn_list))
+        #                   for turn_list in turn_list_output))
 
         run = True
 
+        self.visualizer.update_display(turn_list_output[self.turn])
+        print()
+        print()
+        print()
+        control: bool = False
         while run:
             for event in pygame.event.get():
+
+                # if event.type == pygame.MOUSEBUTTONDOWN:
+                #     print(event)
+                #     print()
 
                 if (event.type == pygame.QUIT):
                     run = False
 
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_LCTRL:
+                        control = False
+
                 if event.type == pygame.KEYDOWN:
-                    if (event.key == pygame.K_ESCAPE):
+                    print()
+                    if event.key == pygame.K_LCTRL:
+                        control = True
+                    if ((event.key in (pygame.K_ESCAPE, pygame.K_q))):
                         run = False
-                    if (event.key == pygame.K_LEFT) and self.turn > 0:
-                        self.turn_back(zone_path, cap_path)
+                    if (control and event.key == pygame.K_c):
+                        raise KeyboardInterrupt
+                    if (event.key == pygame.K_LEFT) and self.turn - 1 >= 0:
+
+                        self.turn -= 1
+                        self.visualizer.update_display(
+                            turn_list_output[self.turn])
+                        print("Turn backward -", self.turn)
+
                     if (event.key == pygame.K_RIGHT and
-                        self.drone_map.end_zone.get_occupancy()
-                            < self.drone_map.nb_drones):
-                        self.turn_forward(zone_path, cap_path)
+                            turns > self.turn + 1):
+
+                        self.turn += 1
+                        self.visualizer.update_display(
+                            turn_list_output[self.turn])
+                        print("Turn forward -", self.turn)
+
+                if event.type == pygame.VIDEORESIZE:
+                    # print("VIDEORESIZE", event.w, event.h)
+                    # print()
+                    self.visualizer.resize(event.w, event.h)
+
+                elif event.type == pygame.WINDOWSIZECHANGED:
+                    # print("WINDOWSIZECHANGED", event.x, event.y)
+                    self.visualizer.resize(event.x, event.y)
 
         print("Quit")
+
+        print()
+        print()
+        self.visualizer.terminate()
 
     """
         for drone in self.drones:
@@ -298,6 +334,39 @@ class DroneManager():
                         full.update([dest_list])
         self.turn += 1
         """
+
+    """
+    def turn_back(self, zone_path: list[Zone], cap_path: list[int]) -> None:
+        # moved_to: dict[Zone, int] = {zone:  for zone in self.drone_map.zones}
+        for drone in self.drones[::-1]:
+            if drone.buffer:
+                drone.buffer = None
+                continue
+            if drone.loc == self.drone_map.start_zone:
+                continue
+
+            current_index = zone_path.index(drone.loc)
+
+            next_zone = zone_path[current_index - 1]
+            if (next_zone in drone.loc.get_connections() and
+                    next_zone.max_drones - next_zone.get_occupancy() > 0):
+                drone.move_to_zone(next_zone)
+                print(
+                    f"Drone {drone.index} moved back to {next_zone.name}",
+                    "with capacity",
+                    f"{next_zone.get_occupancy()}/{next_zone.max_drones}")
+
+        for drone in self.drones:
+            if drone.loc == self.drone_map.end_zone:
+                print("Finished!")
+                continue
+            print(drone.loc.name, "  \t", drone.loc.loc,
+                  "\t", drone.loc.get_occupancy())
+        # self.visualizer.animate_turn()
+
+        self.turn -= 1
+        print("Turn Back -", self.turn)
+    """
 
 
 class Drone():
@@ -394,3 +463,6 @@ class Drone():
             self.buffer = None
             return True
         return False
+
+    def __str__(self) -> str:
+        return f"Drone {self.index} at {self.loc}"
