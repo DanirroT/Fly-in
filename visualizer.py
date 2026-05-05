@@ -138,9 +138,9 @@ class WindowedVisualizer():
         # print("Map Corners:", bottom_right, top_left)
         _y = float(delta_y/2 % 1)
         middle_map = CoordinatesFloat(delta_x/2, _y)
-        middle_display = Coordinates(round(self.dimensions.x/2),
-                                     round(self.dimensions.y/2
-                                           - self.menu_hight/2))
+        # middle_display = Coordinates(round(self.dimensions.x/2),
+        #                              round(self.dimensions.y/2
+        #                                    - self.menu_hight/2))
         # print()
         # print(middle_map)
         # print()
@@ -148,7 +148,8 @@ class WindowedVisualizer():
         # print()
 
         scale_x = (self.dimensions.x - (2 * self.margins.x)) / (delta_x + 1)
-        scale_y = ((self.dimensions.y - ((2 * self.margins.y) + self.menu_hight))
+        scale_y = ((self.dimensions.y - ((2 * self.margins.y)
+                                         + self.menu_hight))
                    / (delta_y + 1))
 
         scale = Coordinates(round(scale_x), round(scale_y))
