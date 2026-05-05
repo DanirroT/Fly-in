@@ -3,30 +3,41 @@
 from map_classes import Zone
 from map_classes import Coordinates, DroneMap, Colors
 from enum import Enum
+from typing import NamedTuple
 
 
 import pygame
 import random
 
 
+class CoordinatesFloat(NamedTuple):
+    x: float
+    y: float
+
+    def __str__(self) -> str:
+        return f"x: {self.x}, y: {self.y}"
+
+
 def terminal_clear() -> None:
     print("\033[H\033[J", end="")
 
 
-# class Visualizer(ABC):
+"""
+class Visualizer(ABC):
 
-#     drone_map: DroneMap
+    drone_map: DroneMap
 
-#     def __init__(self, drone_map: DroneMap) -> None:
-#         self.drone_map = drone_map
+    def __init__(self, drone_map: DroneMap) -> None:
+        self.drone_map = drone_map
 
-#     @abstractmethod
-#     def animate_turn(self, start_zone: Zone, end_zone: Zone) -> None:
-#         pass
+    @abstractmethod
+    def animate_turn(self, start_zone: Zone, end_zone: Zone) -> None:
+        pass
 
-#     @abstractmethod
-#     def terminate(self) -> None:
-#         pass
+    @abstractmethod
+    def terminate(self) -> None:
+        pass
+"""
 
 
 class ColorsVals(tuple[int, int, int], Enum):
@@ -50,13 +61,13 @@ class ColorsVals(tuple[int, int, int], Enum):
 
     ORANGE = (255, 127, 0)
     PURPLE = (127, 0, 255)
-    LIME = (255, 100, 100)
-    # LIGHTBLUE = (255, 0, 0)
+    LIME = (200, 225, 100)
+    LIGHTBLUE = (100, 225, 225)
 
     GOLD = (255, 207, 64)
     MAROON = (80, 0, 0)
     CRIMSON = (120, 6, 6)
-    PINK = (255, 153, 153)
+    PINK = (255, 167, 225)
     VIOLET = (180, 0, 255)
 
     NONE = (150, 150, 150)
@@ -70,6 +81,8 @@ class WindowedVisualizer():
     # screen: Surface
     dimensions: Coordinates
     margins: Coordinates = Coordinates(100, 50)
+    text_margin: int = 20
+    text_size: int = 30
     menu_hight: int
     # working_dimensions: Coordinates
     stars: list[Coordinates]
@@ -85,7 +98,7 @@ class WindowedVisualizer():
         pygame.init()
         pygame.font.init()
         pygame.display.set_caption("Fly-in")
-        self.font = pygame.font.SysFont('freesanbold.ttf', 30)
+        self.font = pygame.font.SysFont('freesanbold.ttf', self.text_size)
         self.stars = []
         for _ in range(50):
             self.stars.append(Coordinates(
@@ -95,14 +108,22 @@ class WindowedVisualizer():
         self.build_map()
         pygame.display.update()
 
-    def pos_to_display(self, pos: Coordinates, middle: Coordinates,
+    def pos_to_display(self, pos: Coordinates, middle: CoordinatesFloat,
                        scale: Coordinates) -> Coordinates:
+        # print()
+        # print()
+        # print(pos)
+        # print()
+        # print(Coordinates(
+        #     round(((pos.x - middle.x) * scale.x) + self.dimensions.x/2),
+        #     round(((pos.y - middle.y) * -scale.y)
+        #           + (self.dimensions.y/2) - (self.menu_hight/2))))
 
         return Coordinates(
             round(((pos.x - middle.x) * scale.x) + self.dimensions.x/2),
-            round(((pos.y - middle.y) * scale.y - (self.menu_hight/2))
-                  + self.dimensions.y/2)
-        )
+            round(((pos.y - middle.y) * -scale.y) - self.text_margin
+                  + (self.dimensions.y/2) - (self.menu_hight/2))
+        )  # trying to de-invert the maps
 
     def build_map(self) -> None:
         self.screen = pygame.display.set_mode(self.dimensions,
@@ -110,23 +131,28 @@ class WindowedVisualizer():
         self.screen.fill((3, 20, 56))
 
         bottom_right, top_left = self.drone_map.map_corners
-        delta_x = top_left.x - bottom_right.x + 1
-        delta_y = top_left.y - bottom_right.y + 1
+        delta_x = top_left.x - bottom_right.x
+        delta_y = top_left.y - bottom_right.y
         # print("Map delta_x:", top_left.x, bottom_right.x, delta_x, sep=" | ")
         # print("Map delta_y:", bottom_right.y, top_left.y, delta_y, sep=" | ")
         # print("Map Corners:", bottom_right, top_left)
         _y = float(delta_y/2 % 1)
-        middle_map = Coordinates(round(delta_x/2), round(_y))
-        # middle_display = Coordinates(round(self.dimensions.x/2),
-        #                              round(self.dimensions.y/2))
+        middle_map = CoordinatesFloat(delta_x/2, _y)
+        middle_display = Coordinates(round(self.dimensions.x/2),
+                                     round(self.dimensions.y/2
+                                           - self.menu_hight/2))
+        # print()
         # print(middle_map)
+        # print()
+        # print(middle_display)
+        # print()
 
-        scale_x = (self.dimensions.x - 2 * self.margins.x) / delta_x
-        scale_y = ((self.dimensions.y - 2 * (self.margins.y + self.menu_hight))
-                   / delta_y)
+        scale_x = (self.dimensions.x - (2 * self.margins.x)) / (delta_x + 1)
+        scale_y = ((self.dimensions.y - ((2 * self.margins.y) + self.menu_hight))
+                   / (delta_y + 1))
 
         scale = Coordinates(round(scale_x), round(scale_y))
-        # print(scale)
+        print(scale)
 
         for star in self.stars:
             star_loc = Coordinates(round((star.x * self.dimensions.x) / 120),
@@ -161,7 +187,6 @@ class WindowedVisualizer():
 
         # print()
         # print(middle_map)
-
         # print()
         # print(middle_map_display)
         # print()
@@ -190,7 +215,8 @@ class WindowedVisualizer():
             # print(zone.loc, end=" -> ")
             coords_list = self.pos_to_display(zone.loc, middle_map, scale)
             # print(coords_list)
-            text1 = self.font.render(zone.name, True, (5, 5, 5))
+            display_name = zone.name.replace("_", " ")
+            text1 = self.font.render(display_name, True, (5, 5, 5))
             color_vals = ColorsVals.__dict__
             str_exclusion = str.__dict__
             enum_exclusion = Enum.__dict__
@@ -211,7 +237,7 @@ class WindowedVisualizer():
                 pygame.draw.polygon(
                     self.screen, (0, 0, 255),
                     [top_left, bottom_center, bottom_left])
-                text1 = self.font.render(zone.name, True, ColorsVals.PINK)
+                text1 = self.font.render(display_name, True, ColorsVals.PINK)
             else:
                 color_val = (150, 150, 150)
                 for vals_key in color_vals.keys():
@@ -219,25 +245,37 @@ class WindowedVisualizer():
                             str_exclusion and vals_key not in enum_exclusion):
                         color_val = color_vals[vals_key]
                         break
-                text1 = self.font.render(zone.name, True, color_val)
+                text1 = self.font.render(display_name, True, color_val)
                 pygame.draw.circle(self.screen, color_val,
                                    coords_list, 15, 0)
-            text_offset = coords_list.y + 40 + ((zone.loc.x % 2) * 25)
+            text_offset = round(coords_list.y + (self.text_size) +
+                                ((zone.loc.x % 2) * (self.text_size * 0.75)))
             text_rect = text1.get_rect()
             text_rect.center = (coords_list.x, text_offset)
             self.screen.blit(text1, text_rect)
 
-        menu_space = pygame.draw.rect(
+        pygame.draw.rect(
             self.screen, (150, 150, 150),
             (0, self.dimensions.y-self.menu_hight,
              self.dimensions.x, self.menu_hight)
         )
-        menu_str = (
-            "Use arrows <- / -> to cycle Turns\n"
-            "Use Q or Esc to Quit"
-        )
-        menu_text = self.font.render(menu_str, True, (0, 0, 0))
-        self.screen.blit(menu_text, menu_space, menu_space)
+        menu_space_center = (round(self.dimensions.x/2),
+                             round(self.dimensions.y - self.menu_hight/2))
+        menu_str_1 = "Use arrows <- / -> to cycle Turns"
+        menu_text = self.font.render(menu_str_1, True, (0, 0, 0))
+        menu_text_rect = menu_text.get_rect()
+        menu_space_center_offset = (menu_space_center[0],
+                                    menu_space_center[1] - self.text_margin)
+        menu_text_rect.center = menu_space_center_offset
+        self.screen.blit(menu_text, menu_text_rect)
+
+        menu_str_2 = "Use Q or Esc to Quit"
+        menu_text = self.font.render(menu_str_2, True, (0, 0, 0))
+        menu_text_rect = menu_text.get_rect()
+        menu_space_center_offset = (menu_space_center[0],
+                                    menu_space_center[1] + self.text_margin)
+        menu_text_rect.center = menu_space_center_offset
+        self.screen.blit(menu_text, menu_text_rect)
 
     def resize(self, w: int, h: int) -> None:
         self.dimensions = Coordinates(w, h)

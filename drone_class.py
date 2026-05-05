@@ -188,6 +188,7 @@ class DroneManager():
         #                   for turn_list in turn_list_output))
 
         run = True
+        self.turn = 0
 
         self.visualizer.update_display(turn_list_output[self.turn])
         print()
@@ -446,7 +447,11 @@ class Drone():
     def move_to_zone(self, dest: Zone) -> None:
 
         if dest.zone == ZoneType.RESTRICTED:
+            self.loc.update_occupancy(-1)
+            self.last_zone = self.loc
+            self.loc = None
             self.buffer = dest
+            self.buffer.update_occupancy(1)
             return
 
         self.last_zone = self.loc
@@ -456,10 +461,10 @@ class Drone():
 
     def clear_buff(self) -> bool:
         if self.buffer:
-            self.last_zone = self.loc
-            self.loc.update_occupancy(-1)
+            # self.last_zone = self.loc
+            # self.loc.update_occupancy(-1)
             self.loc = self.buffer
-            self.loc.update_occupancy(1)
+            # self.loc.update_occupancy(1)
             self.buffer = None
             return True
         return False

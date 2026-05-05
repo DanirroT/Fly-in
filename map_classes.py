@@ -45,7 +45,7 @@ class Colors(str, Enum):
     ORANGE = "orange"
     PURPLE = "purple"
     LIME = "lime"
-    # LIGHTBLUE = "lightblue"
+    LIGHTBLUE = "lightblue"
 
     GOLD = "gold"
     MAROON = "maroon"
@@ -63,14 +63,6 @@ class Colors(str, Enum):
 class Coordinates(NamedTuple):
     x: int
     y: int
-
-    def __str__(self) -> str:
-        return f"x: {self.x}, y: {self.y}"
-
-
-class CoordinatesFloat(NamedTuple):
-    x: float
-    y: float
 
     def __str__(self) -> str:
         return f"x: {self.x}, y: {self.y}"
@@ -331,6 +323,8 @@ class DroneMap():
             y_ = zone.loc.y - self.map_corners[0].y
             x_ = zone.loc.x - self.map_corners[0].x
             self.grid[y_][x_] = zone
+
+        self.grid = self.grid[::-1]
 
     def get_summary(self) -> dict[str, dict[str | int, dict[str, Any] | Any]]:
         return {

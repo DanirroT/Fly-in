@@ -6,7 +6,7 @@
 #    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
-#    Updated: 2026/05/04 22:21:47 by dmota-ri         ###   ########.fr        #
+#    Updated: 2026/05/05 21:48:59 by dmota-ri         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -34,39 +34,40 @@ MAP_FILE = maps/hard/03_ultimate_challenge.txt
 
 OBJ = **.py *.py
 
-VENV = .venv
+VENV = .venv/
 
 DEBUGGER = $(PYTHON) pdb
 PYTHON = python3 -m
 
 RM = rm -fr
 
-.ONESHELL:
 
 run:
 	$(PYTHON) $(MAIN) $(MAP_FILE)
 
 test_all:
 
-	$(PYTHON) $(MAIN) maps/easy/01_linear_path.txt
-	$(PYTHON) $(MAIN) maps/easy/02_simple_fork.txt
-	$(PYTHON) $(MAIN) maps/easy/03_basic_capacity.txt
+# 	$(PYTHON) $(MAIN) maps/easy/01_linear_path.txt
+	$(PYTHON) $(MAIN) maps/easy/02_simple_fork.txt  # should split drones
+# 	$(PYTHON) $(MAIN) maps/easy/03_basic_capacity.txt
 
-	$(PYTHON) $(MAIN) maps/medium/01_dead_end_trap.txt
-	$(PYTHON) $(MAIN) maps/medium/02_circular_loop.txt
-	$(PYTHON) $(MAIN) maps/medium/03_priority_puzzle.txt
+# 	$(PYTHON) $(MAIN) maps/medium/01_dead_end_trap.txt
+	$(PYTHON) $(MAIN) maps/medium/02_circular_loop.txt  # Restricted area Error
+# 	$(PYTHON) $(MAIN) maps/medium/03_priority_puzzle.txt
 
-	$(PYTHON) $(MAIN) maps/hard/01_maze_nightmare.txt
-	$(PYTHON) $(MAIN) maps/hard/02_capacity_hell.txt
-	$(PYTHON) $(MAIN) maps/hard/03_ultimate_challenge.txt
+	$(PYTHON) $(MAIN) maps/hard/01_maze_nightmare.txt  # inverted map??
+# 	$(PYTHON) $(MAIN) maps/hard/02_capacity_hell.txt
+	$(PYTHON) $(MAIN) maps/hard/03_ultimate_challenge.txt  # complete disaster, going to restricted for no reason especially when priority is available
 
 	$(PYTHON) $(MAIN) maps/challenger/01_the_impossible_dream.txt
 
 debug:
 	$(DEBUGGER) $(MAIN).py $(MAP_FILE)
 
+.ONESHELL:
+
 install: $(VENV)
-	source $(VENV)/bin/activate
+	source $(VENV)bin/activate
 	pip install $(DEPENDENCIES)
 
 $(VENV):
