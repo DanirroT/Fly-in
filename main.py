@@ -51,7 +51,7 @@ def main(args: list[str]) -> None:
 
     input()
 
-    terminal_clear()
+    # terminal_clear()
 
     manager = DroneManager(drone_map, WindowedVisualizer)
 

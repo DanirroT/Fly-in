@@ -6,7 +6,7 @@
 #    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
-#    Updated: 2026/05/05 21:48:59 by dmota-ri         ###   ########.fr        #
+#    Updated: 2026/05/07 21:09:29 by dmota-ri         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,9 +28,9 @@ MAIN = main
 
 # MAP_FILE = maps/hard/01_maze_nightmare.txt
 # MAP_FILE = maps/hard/02_capacity_hell.txt
-MAP_FILE = maps/hard/03_ultimate_challenge.txt
+# MAP_FILE = maps/hard/03_ultimate_challenge.txt
 
-# MAP_FILE = maps/challenger/01_the_impossible_dream.txt
+MAP_FILE = maps/challenger/01_the_impossible_dream.txt
 
 OBJ = **.py *.py
 
@@ -69,6 +69,7 @@ debug:
 install: $(VENV)
 	source $(VENV)bin/activate
 	pip install $(DEPENDENCIES)
+	export PYGAME_HIDE_SUPPORT_PROMPT=1
 
 $(VENV):
 	$(PYTHON) venv $(VENV)

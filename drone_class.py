@@ -449,7 +449,7 @@ class Drone():
         if dest.zone == ZoneType.RESTRICTED:
             self.loc.update_occupancy(-1)
             self.last_zone = self.loc
-            self.loc = None
+            # self.loc = None
             self.buffer = dest
             self.buffer.update_occupancy(1)
             return
