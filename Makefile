@@ -6,7 +6,7 @@
 #    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
-#    Updated: 2026/05/07 21:09:29 by dmota-ri         ###   ########.fr        #
+#    Updated: 2026/05/10 21:54:03 by dmota-ri         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -27,10 +27,10 @@ MAIN = main
 # MAP_FILE = maps/medium/03_priority_puzzle.txt
 
 # MAP_FILE = maps/hard/01_maze_nightmare.txt
-# MAP_FILE = maps/hard/02_capacity_hell.txt
+MAP_FILE = maps/hard/02_capacity_hell.txt
 # MAP_FILE = maps/hard/03_ultimate_challenge.txt
 
-MAP_FILE = maps/challenger/01_the_impossible_dream.txt
+# MAP_FILE = maps/challenger/01_the_impossible_dream.txt
 
 OBJ = **.py *.py
 

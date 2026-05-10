@@ -3,7 +3,7 @@
 from map_classes import Zone
 from map_classes import Coordinates, DroneMap, Colors
 from enum import Enum
-from typing import NamedTuple, TypedDict
+from typing import NamedTuple
 from math import cos, sin, pi
 
 
@@ -307,21 +307,22 @@ class WindowedVisualizer():
         menu_text_rect.center = menu_space_center_offset
         self.background.blit(menu_text, menu_text_rect)
 
-    def resize(self, w: int, h: int) -> None:
+    def resize(self, w: int, h: int, turn: int,
+               drone_locs: list[Zone]) -> None:
         self.dimensions = Coordinates(w, h)
 
         # print("resize to:", w, h)
         self.build_map()
-        pygame.display.update()
+        self.update_display(turn, drone_locs)
         # self.redraw()
 
-    def update_display(self, drone_locs: list[Zone]) -> None:
+    def update_display(self, turn: int, drone_locs: list[Zone]) -> None:
 
-        print()
-        print("\n".join(map(str, drone_locs)))
-        print()
-        print()
-        print("\n".join(map(str, self.drone_pos)))
+        # print()
+        # print("\n".join(map(str, drone_locs)))
+        # print()
+        # print()
+        # print("\n".join(map(str, self.drone_pos)))
 
         zone_checker = drone_locs.copy()
 
@@ -346,13 +347,23 @@ class WindowedVisualizer():
 
             self.drone_pos[i].center = (_x + x_offset, _y + y_offset)
             self.screen.blit(self.drone_png, self.drone_pos[i])
-            print("drone put in", drone_loc.loc)
+            # print("drone put in", drone_loc.loc)
 
-        print()
-        print("\n".join(map(str, self.drone_pos)))
+        # print()
+        # print("\n".join(map(str, self.drone_pos)))
 
-        print()
-        print("\n".join(map(str, drone_locs)))
+        # print()
+        # print("\n".join(map(str, drone_locs)))
+
+        # print(turn)
+
+        turn_text = self.font.render(f"Turn: {turn}", True, (0, 0, 0))
+        turn_rect = turn_text.get_rect()
+        turn_rect.center = (50, round(self.dimensions.y - self.menu_hight / 2))
+        turn_rect.left = 20
+        # print(turn_rect.center)
+        self.screen.blit(turn_text, turn_rect)
+
         pygame.display.update()
 
     def terminate(self) -> None:
