@@ -6,7 +6,7 @@
 #    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
-#    Updated: 2026/05/10 21:54:03 by dmota-ri         ###   ########.fr        #
+#    Updated: 2026/05/11 13:48:35 by dmota-ri         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -18,7 +18,7 @@ MAIN = main
 
 # MAP_FILE = maps/easy/01_linear_path.txt
 # MAP_FILE = maps/easy/02_simple_fork.txt
-# MAP_FILE = maps/easy/03_basic_capacity.txt
+MAP_FILE = maps/easy/03_basic_capacity.txt
 
 # MAP_FILE = maps/easy/02_simple_fork_copy.txt
 
@@ -27,7 +27,7 @@ MAIN = main
 # MAP_FILE = maps/medium/03_priority_puzzle.txt
 
 # MAP_FILE = maps/hard/01_maze_nightmare.txt
-MAP_FILE = maps/hard/02_capacity_hell.txt
+# MAP_FILE = maps/hard/02_capacity_hell.txt
 # MAP_FILE = maps/hard/03_ultimate_challenge.txt
 
 # MAP_FILE = maps/challenger/01_the_impossible_dream.txt

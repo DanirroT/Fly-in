@@ -1,6 +1,6 @@
 import sys
 
-from map_classes import DroneMap, Zone, ZoneType, Hubs
+from map_classes import Connection, DroneMap, Zone, ZoneType, Hubs
 from visualizer import WindowedVisualizer
 from visualizer import terminal_clear
 # from time import sleep
@@ -142,6 +142,8 @@ class DroneManager():
 
         moved: str = "N/A"
 
+        conn_occupancy: dict[Connection, int] = {}
+
         for drone in self.drones:
 
             print(drone)
@@ -155,18 +157,35 @@ class DroneManager():
 
             possible_moves = priority_moves[drone.loc]
 
+            print(possible_moves)
+
             for zone in possible_moves:
 
                 if zone == drone.last_zone:
                     continue
 
-                future_occupancy = (
-                    zone.get_occupancy()
-                )
+                zone_occupancy = (zone.get_occupancy())
 
-                print(f"\t to {zone} {future_occupancy}/{zone.max_drones}")
+                move_conn: Connection | None = None
 
-                if future_occupancy >= zone.max_drones:
+                for conn in self.drone_map.connections:
+                    if ((conn.start == drone.loc and conn.end == zone) or
+                        (conn.end == drone.loc and conn.start == zone)):
+
+                        move_conn = conn
+                        conn_occupancy[move_conn] = conn_occupancy.get(move_conn, 0) + 1
+                        break
+
+                if move_conn is None:
+                    raise TypeError(
+                        f"Connection not found between {drone.loc} and {zone}"
+                    )
+
+                print(f"\t to {zone} {zone_occupancy}/{zone.max_drones} by",
+                      f"{move_conn} {conn_occupancy[move_conn]}/{move_conn.max_link_capacity}")
+
+                if (zone_occupancy >= zone.max_drones
+                    or conn_occupancy[move_conn] >= move_conn.max_link_capacity):
                     continue
 
                 # reserved[zone] = reserved.get(zone, 0) + 1
@@ -186,7 +205,7 @@ class DroneManager():
                 print(drone.loc, drone.loc.get_occupancy())
 
                 break
-            # input()
+            input()
         return moved
 
     def calc_drone_pos(self) -> list[list[Zone]]:
@@ -195,34 +214,34 @@ class DroneManager():
 
         priority_moves = self.build_priority_moves(dijkstra_zone)
 
-        any_cleared = True
+        # any_cleared = True
 
-        while any_cleared:
-            any_cleared = False
-            to_remove: list[Zone] = []
+        # while any_cleared:
+        #     any_cleared = False
+        #     to_remove: list[Zone] = []
 
-            for zone, neighbors in priority_moves.items():
-                if (len(neighbors) == 1
-                    and zone.hub_type != Hubs.START_HUB
-                        and zone.hub_type != Hubs.END_HUB):
-                    to_remove.append(zone)
+        #     for zone, neighbors in priority_moves.items():
+        #         if (len(neighbors) == 1
+        #             and zone.hub_type != Hubs.START_HUB
+        #                 and zone.hub_type != Hubs.END_HUB):
+        #             to_remove.append(zone)
 
-            for doomed in to_remove:
+        #     for doomed in to_remove:
 
-                priority_moves[doomed] = []
+        #         priority_moves[doomed] = []
 
-                for zone, neighbors in priority_moves.items():
+        #         for zone, neighbors in priority_moves.items():
 
-                    if doomed in neighbors:
-                        neighbors.remove(doomed)
+        #             if doomed in neighbors:
+        #                 neighbors.remove(doomed)
 
-                any_cleared = True
+        #         any_cleared = True
 
-                print("cleared", doomed)
+        #         print("cleared", doomed)
 
-        print()
-        print(self.drone_map.grid[1][7], priority_moves[self.drone_map.grid[1][7]])
-        print()
+        # print()
+        # print(self.drone_map.grid[1][7], priority_moves[self.drone_map.grid[1][7]])
+        # print()
 
         # for zones in priority_moves:
         #     priority_moves[zones] = priority_moves[zones][:2]
@@ -253,8 +272,8 @@ class DroneManager():
 
             moved = self.simulate_turn(priority_moves)
 
-            if moved == "N/A":
-                raise TabError(f"DEADLOCK {moved}")
+            # if moved == "N/A":
+                # raise TabError(f"DEADLOCK {moved}")
 
             # input()
 
