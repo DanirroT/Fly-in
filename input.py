@@ -73,6 +73,16 @@ def read_map_file(file_name: str) -> DroneMap | Any:
                 hub_type, rest = line.split(":", 1)
                 name, x, y, *metadata = rest.split()
                 if metadata:
+                    if metadata[0][:1] != "[":
+                        raise ValueError(
+                            "Metadata must be in between Square Brackets\nor\n"
+                            f"Detected Junk Data at the end of line\n{line}")
+                    if metadata[-1][-1:] != "]":
+                        raise ValueError(
+                            "Metadata must be in between Square Brackets\nor\n"
+                            f"Detected Junk Data at the end of line\n{line}")
+                    # metadata[0] = metadata[0][:-1]
+                    # metadata[-1] = metadata[-1][1:]
                     raw_meta = " ".join(metadata).strip("[]")
                     meta_dict = str_to_dict_parse(raw_meta, " ", "=")
                 else:
@@ -106,7 +116,8 @@ def read_map_file(file_name: str) -> DroneMap | Any:
                             f"Detected Junk Data at the end of line\n{line}")
                     # metadata[0] = metadata[0][:-1]
                     # metadata[-1] = metadata[-1][1:]
-                    meta_dict = str_to_dict_parse(" ".join(metadata), " ", "=")
+                    raw_meta = " ".join(metadata).strip("[]")
+                    meta_dict = str_to_dict_parse(raw_meta, " ", "=")
                 else:
                     meta_dict = {}
 

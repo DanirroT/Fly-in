@@ -115,7 +115,7 @@ class Zone(BaseModel):
         if self._occupancy < 0:
             raise ValueError("Occupancy cannot be negative:", self.name)
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash(self.name)
 
     def __str__(self) -> str:
@@ -163,7 +163,12 @@ class Connection(BaseModel):
     max_link_capacity: int = Field(gt=0, default=1)
 
     def __str__(self) -> str:
-        return f"{self.start} to {self.end}"
+        return (f"{self.start} to {self.end}" +
+                f" cap {self.max_link_capacity}"
+                if (self.max_link_capacity != 1) else "")
+
+    def __hash__(self) -> int:
+        return hash(str(self))
 
 
 class DroneMap():
@@ -191,6 +196,7 @@ class DroneMap():
             raise ValueError("An error has occurred while setting Zones\n"
                              f"Input: {zones}\nError: {e}")
 
+        # print("connections pre-check", connections)
         try:
             self.set_connections(connections)
         except ValueError as e:
@@ -262,6 +268,7 @@ class DroneMap():
         self.zones = []
         for zone in zone_list:
             metadata = zone[-1]
+            # print(metadata)
             zone_dict: dict[str, str | Coordinates | int] = {
                 k: v for k, v in zip(["hub_type", "name", "loc"], zone[:-1])}
             for key in ["zone", "color", "max_drones"]:
@@ -273,6 +280,8 @@ class DroneMap():
                 raise
         for zone in self.zones:
             zone.zero_connections()
+        # print()
+        # print()
 
     def set_connections(
             self,
@@ -281,6 +290,7 @@ class DroneMap():
         self.connections = []
         for conn in conn_list:
             metadata = conn[-1]
+            # print(metadata)
             conn_dict: dict[str, str | int] = {
                 k: v for k, v in zip(["start", "end"], conn[:-1])}
             for key in ["max_link_capacity"]:
@@ -291,6 +301,7 @@ class DroneMap():
                     Connection(**conn_dict))  # type: ignore
             except (ValidationError, ValueError):
                 raise
+        # print(list(map(str, self.connections)))
 
     def connect_zones(self) -> None:
         zone_lookup = {z.name: z for z in self.zones}
