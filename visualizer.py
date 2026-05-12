@@ -6,7 +6,6 @@ from enum import Enum
 from typing import NamedTuple
 from math import cos, sin, pi
 
-
 import pygame
 from pygame import Rect, Surface
 # from pygame.locals import Rect, Font
@@ -77,14 +76,6 @@ class ColorsVals(tuple[int, int, int], Enum):
 
     def __str__(self) -> str:
         return str(self.value)
-
-
-# class DroneSprite(TypedDict):
-#     space: Rect
-#     loc: Coordinates
-
-#     def __str__(self) -> str:
-#         return f"DroneSprite: {self.loc}"
 
 
 class WindowedVisualizer():
@@ -164,7 +155,9 @@ class WindowedVisualizer():
         delta_x = top_left.x - bottom_right.x
         delta_y = top_left.y - bottom_right.y
         _y = float(delta_y/2 % 1)
-        self.middle_map = CoordinatesFloat(delta_x/2, _y)
+        self.middle_map = CoordinatesFloat(delta_x/2,_y
+                                           if abs(top_left.y) > abs(bottom_right.y)
+                                           else-_y)
 
         self.scale = Coordinates(
             round((self.dimensions.x - (2 * self.margins.x)) / (delta_x + 1)),
@@ -182,11 +175,13 @@ class WindowedVisualizer():
                                            - self.menu_hight/2))
 
         print()
-        print(scale)
+        print("scale:", self.scale)
         print()
-        print(middle_map)
+        print("middle-display:", middle_display)
         print()
-        print(middle_display)
+        print("middle-map:", self.middle_map)
+        print()
+        print("middle-convert:", self.pos_to_display(self.middle_map))
         print()
         pygame.draw.line(self.screen, (0, 0, 0),
                          self.dimensions, (0, 0), 5)
