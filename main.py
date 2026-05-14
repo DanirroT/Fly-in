@@ -35,20 +35,20 @@ def main(args: list[str]) -> None:
         print(f"Unexpected error occurred: {e}")
         return
 
-    print()
-    print("Drones", drone_map.nb_drones)
-    print("Zones", len(drone_map.zones))
-    print("Connections", len(drone_map.connections))
+    # print()
+    # print("Drones", drone_map.nb_drones)
+    # print("Zones", len(drone_map.zones))
+    # print("Connections", len(drone_map.connections))
 
-    print()
+    # print()
 
-    print(drone_map.get_nice_summary())
+    # print(drone_map.get_nice_summary())
 
-    print()
+    # print()
 
-    print("Name:", file_name, end="\t")
+    # print("Name:", file_name, end="\t")
 
-    drone_map.print_map()
+    # drone_map.print_map()
 
     manager = DroneManager(drone_map, WindowedVisualizer)
 

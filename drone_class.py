@@ -1,6 +1,6 @@
 from map_classes import Connection, DroneMap, Zone, ZoneType, Hubs
 from visualizer import WindowedVisualizer
-from visualizer import terminal_clear
+# from visualizer import terminal_clear
 # from time import sleep
 from typing import Type
 import sys
@@ -18,16 +18,21 @@ class Drone():
         self.last_zone = start
         self.buffer = None
 
-    def make_decision(self, zones_list: list[Zone]) -> Zone | None:
+    """
+    def make_decision(self, zones_list: list[tuple[Zone, int]],
+                      last_path: int = sys.maxsize) -> Zone | None:
 
-        for next_zone in zones_list:
+        if self.loc.hub_type is Hubs.END_HUB:
+            return None
 
-            if self.loc.hub_type is Hubs.END_HUB:
-                return None
+        for next_zone, weight in zones_list:
 
             if (next_zone == self.last_zone or
                     next_zone.hub_type == Hubs.START_HUB):
                 continue
+
+            if weight + 2 > last_path:
+                return None
 
             # if next_zone.get_occupancy() == next_zone.max_drones:
             #     continue
@@ -35,6 +40,7 @@ class Drone():
             return next_zone
 
         return None
+    """
 
     """
     def make_decision(self, usable_zones: set[Zone] | None = None) -> Zone:
@@ -152,7 +158,7 @@ class DroneManager():
         visited: set[Zone] = set()
         dist[self.drone_map.end_zone] = (0, 0)
 
-        self.drone_map.print_map()
+        # self.drone_map.print_map()
         # print()
         # print()
         # print([str(zone) for _dict in pq for zone in _dict.values()])
@@ -235,6 +241,8 @@ class DroneManager():
                 key=lambda n: (
                     (dist[n][0]),
                     -(dist[n][1]),
+                    -n.loc.x,
+                    abs(n.loc.y - self.drone_map.end_zone.loc.y),
                     n.max_drones
                 )
             )
@@ -292,12 +300,18 @@ class DroneManager():
 
     def simulate_turn(
         self,
-        priority_moves: dict[Zone, list[Zone]]
+        priority_moves: dict[Zone, list[Zone]],
+        dijkstra_zone: dict[Zone, tuple[int, int]]
     ) -> None:
 
         conn_occupancy: dict[Connection, int] = {}
 
+        # moved: bool = True
+
         for drone in self.drones:
+
+            # if not moved:
+            #     return
 
             # print(drone)
 
@@ -307,13 +321,36 @@ class DroneManager():
             if drone.loc == self.drone_map.end_zone:
                 continue
 
+            # moved = False
+
             possible_moves = priority_moves[drone.loc]
 
             # print(possible_moves)
 
             for zone in possible_moves:
 
-                if zone == drone.last_zone:
+                #
+
+                #     # if next_zone.get_occupancy() == next_zone.max_drones:
+                #     #     continue
+
+                #     return next_zone
+
+                if zone == drone.last_zone or zone.hub_type == Hubs.START_HUB:
+                    continue
+
+                # print(f"\tDrone {drone.index} in {drone.loc.name}"
+                #       f" going to {zone.name}"
+                #       )
+
+                # print(
+                #     f"\tOptimal Path {dijkstra_zone[possible_moves[0]][0]}",
+                #     "< compare",
+                #     dijkstra_zone[zone][0]
+                # )
+
+                if (dijkstra_zone[possible_moves[0]][0] <
+                        (dijkstra_zone[zone][0]) - 1):
                     continue
 
                 zone_occupancy = (zone.get_occupancy())
@@ -355,14 +392,15 @@ class DroneManager():
                 # print(
                 #     f"Drone {drone.index} moving "
                 #     f"{drone.loc.name} -> {zone.name}"
+                #     f"Weight: {dijkstra_zone[zone][0]}"
                 # )
 
                 drone.move_to_zone(zone)
 
                 # print(drone.loc, drone.loc.get_occupancy())
 
+                # moved = True
                 break
-            # input()
 
     def calc_drone_pos(self) -> list[list[Zone]]:
 
@@ -386,15 +424,16 @@ class DroneManager():
 
         pos_history: list[list[Zone]] = []
 
-        turn = 1
+        self.turn = 0
 
         while True:
 
             pos_history.append([drone.loc for drone in self.drones])
 
-            pos_ = pos_history[-1]
+            self.visualizer.update_display(self.turn, pos_history[-1])
 
-            # print(list(map(lambda x: x.name, [zone for zone in pos_])))
+            # print(list(map(lambda x: x.name,
+            #                [zone for zone in pos_history[-1]])))
 
             if all(
                 drone.loc == self.drone_map.end_zone
@@ -402,12 +441,12 @@ class DroneManager():
             ):
                 break
 
+            self.turn += 1
             # print()
             # print()
-            # print("turn:", turn)
-            turn += 1
+            # print("turn:", self.turn)
 
-            self.simulate_turn(priority_moves)
+            self.simulate_turn(priority_moves, dijkstra_zone)
 
             # input()
 
@@ -419,7 +458,7 @@ class DroneManager():
         # self.visualizer.screen.blit(self.visualizer.background, (0, 0))
 
         # input()
-        terminal_clear()
+        # terminal_clear()
 
         turn_list_output = self.calc_drone_pos()
         turns = len(turn_list_output)
@@ -454,6 +493,8 @@ class DroneManager():
         control: bool = False
         while run:
             for event in pygame.event.get():
+
+                # print(event)
 
                 # if event.type == pygame.MOUSEBUTTONDOWN:
                 #     print(event)
@@ -499,7 +540,7 @@ class DroneManager():
                         self.visualizer.update_display(
                             self.turn, turn_list_output[self.turn])
                         print()
-                        print("Back to start -", self.turn)
+                        print("End of Sim -", self.turn)
 
                 if event.type == pygame.VIDEORESIZE:
                     # print("VIDEORESIZE", event.w, event.h)

@@ -1,9 +1,9 @@
 # from abc import ABC, abstractmethod
 
-from map_classes import Zone
+from map_classes import Zone, Hubs, ZoneType
 from map_classes import Coordinates, DroneMap, Colors
 from enum import Enum
-from typing import NamedTuple
+from typing import NamedTuple, Literal
 from math import cos, sin, pi
 
 import pygame
@@ -110,8 +110,25 @@ class WindowedVisualizer():
             )
         self.build_map()
 
+        print(self.drone_map.nb_drones)
+
+        if self.drone_map.nb_drones >= 25:
+            print(25)
+            drone_size = (20, 20)
+        elif self.drone_map.nb_drones >= 10:
+            print(10)
+            drone_size = (30, 30)
+
+        elif self.drone_map.nb_drones >= 5:
+            print(5)
+            drone_size = (40, 40)
+
+        else:
+            print("less")
+            drone_size = (50, 50)
+
         self.drone_png = pygame.image.load('drone.png')
-        self.drone_png = pygame.transform.scale(self.drone_png, (50, 50))
+        self.drone_png = pygame.transform.scale(self.drone_png, drone_size)
         self.drone_png.convert_alpha()
         drone_rect = self.drone_png.get_rect()
         drone_rect.center = self.pos_to_display(self.drone_map.start_zone.loc)
@@ -144,6 +161,26 @@ class WindowedVisualizer():
                 self.text_margin + (self.dimensions.y/2) - (self.menu_hight/2))
         )
 
+    @staticmethod
+    def mod_color(color: tuple[int, int, int],
+                  mod: Literal["darker"] | Literal["lighter"]
+                  ) -> tuple[int, int, int]:
+
+        if mod == "darker":
+            return tuple(
+                max(0, min(255, int(c * 0.7)))
+                for c in color
+            )
+
+        elif mod == "lighter":
+            return tuple(
+                min(255, max(0, int(c + (255 - c) * 0.7)))
+                for c in color
+            )
+
+        else:
+            raise ValueError(f"Mod Value not valid: {mod}")
+
     def build_map(self) -> None:
         self.screen = pygame.display.set_mode(self.dimensions,
                                               pygame.RESIZABLE)
@@ -154,10 +191,9 @@ class WindowedVisualizer():
         bottom_right, top_left = self.drone_map.map_corners
         delta_x = top_left.x - bottom_right.x
         delta_y = top_left.y - bottom_right.y
-        _y = float(delta_y/2 % 1)
-        self.middle_map = CoordinatesFloat(delta_x/2,_y
-                                           if abs(top_left.y) > abs(bottom_right.y)
-                                           else-_y)
+        # _y = float(delta_y/2 % 1)
+        self.middle_map = (
+            CoordinatesFloat(delta_x/2, delta_y/2 + bottom_right.y))
 
         self.scale = Coordinates(
             round((self.dimensions.x - (2 * self.margins.x)) / (delta_x + 1)),
@@ -205,8 +241,6 @@ class WindowedVisualizer():
         self.draw_connection()
         self.draw_zones()
         self.draw_menu()
-
-        self.screen.blit(self.background, (0, 0))
 
     def draw_connection(self) -> None:
 
@@ -260,6 +294,79 @@ class WindowedVisualizer():
                 pygame.draw.polygon(
                     self.background, (0, 0, 255),
                     [top_left, bottom_center, bottom_left])
+
+                grey = (128, 128, 128)
+
+                if zone.zone is ZoneType.BLOCKED:
+                    pygame.draw.line(
+                        self.background, self.mod_color(grey, "darker"),
+                        ((coords_list.x + 20), (coords_list.y + 20)),
+                        ((coords_list.x - 20), (coords_list.y - 20)), 8)
+                    pygame.draw.line(
+                        self.background, self.mod_color(grey, "darker"),
+                        ((coords_list.x + 20), (coords_list.y - 20)),
+                        ((coords_list.x - 20), (coords_list.y + 20)), 8)
+
+                if zone.zone is ZoneType.RESTRICTED:
+                    pygame.draw.line(
+                        self.background, self.mod_color(grey, "darker"),
+                        ((coords_list.x + 5), (coords_list.y + 5)),
+                        ((coords_list.x - 5), (coords_list.y - 5)), 5)
+                    pygame.draw.line(
+                        self.background, self.mod_color(grey, "darker"),
+                        ((coords_list.x + 5), (coords_list.y - 5)),
+                        ((coords_list.x - 5), (coords_list.y + 5)), 5)
+
+                if zone.zone is ZoneType.PRIORITY:
+
+                    pygame.draw.polygon(
+                        self.background, self.mod_color(grey, "lighter"),
+                        [((coords_list.x), (coords_list.y - 10)),
+
+                         (round(coords_list.x - (sin((1/5) * pi) * 4)),
+                          round(coords_list.y - (cos((1/5) * pi) * 4))),
+
+                         (round(coords_list.x - (sin((2/5) * pi) * 10)),
+                          round(coords_list.y - (cos((2/5) * pi) * 10))),
+
+                         (round(coords_list.x - (sin((3/5) * pi) * 4)),
+                          round(coords_list.y - (cos((3/5) * pi) * 4))),
+
+                         (round(coords_list.x - (sin((4/5) * pi) * 10)),
+                          round(coords_list.y - (cos((4/5) * pi) * 10))),
+
+                         (coords_list.x, round(coords_list.y + 4)),
+
+                         (round(coords_list.x + (sin((4/5) * pi) * 10)),
+                          round(coords_list.y - (cos((4/5) * pi) * 10))),
+
+                         (round(coords_list.x + (sin((3/5) * pi) * 4)),
+                          round(coords_list.y - (cos((3/5) * pi) * 4))),
+
+                         (round(coords_list.x + (sin((2/5) * pi) * 10)),
+                          round(coords_list.y - (cos((2/5) * pi) * 10))),
+
+                         (round(coords_list.x + (sin((1/5) * pi) * 4)),
+                          round(coords_list.y - (cos((1/5) * pi) * 4))),
+                         ])
+
+                if zone.hub_type is Hubs.START_HUB:
+                    pygame.draw.polygon(
+                        self.background, self.mod_color(grey, "lighter"),
+                        [(round(coords_list.x - (cos((2/3) * pi) + 5)),
+                          round(coords_list.y - (sin((2/3) * pi) + 5))),
+                         (round(coords_list.x - (cos((2/3) * pi) + 5)),
+                          round(coords_list.y + (sin((2/3) * pi) + 5))),
+                         ((coords_list.x + 5), (coords_list.y))])
+
+                if zone.hub_type is Hubs.END_HUB:
+                    pygame.draw.polygon(
+                        self.background, self.mod_color(grey, "darker"),
+                        [((coords_list.x + 4), (coords_list.y + 4)),
+                         ((coords_list.x + 4), (coords_list.y - 4)),
+                         ((coords_list.x - 4), (coords_list.y - 4)),
+                         ((coords_list.x - 4), (coords_list.y + 4))])
+
                 text1 = self.font.render(display_name, True, ColorsVals.PINK)
             else:
                 color_val = (150, 150, 150)
@@ -271,6 +378,125 @@ class WindowedVisualizer():
                 text1 = self.font.render(display_name, True, color_val)
                 pygame.draw.circle(self.background, color_val,
                                    coords_list, 15, 0)
+
+                if zone.zone is ZoneType.BLOCKED:
+                    pygame.draw.line(
+                        self.background, self.mod_color(color_val, "darker"),
+                        ((coords_list.x + 20), (coords_list.y + 20)),
+                        ((coords_list.x - 20), (coords_list.y - 20)), 8)
+                    pygame.draw.line(
+                        self.background, self.mod_color(color_val, "darker"),
+                        ((coords_list.x + 20), (coords_list.y - 20)),
+                        ((coords_list.x - 20), (coords_list.y + 20)), 8)
+
+                if zone.zone is ZoneType.RESTRICTED:
+                    pygame.draw.line(
+                        self.background, self.mod_color(color_val, "darker"),
+                        ((coords_list.x + 5), (coords_list.y + 5)),
+                        ((coords_list.x - 5), (coords_list.y - 5)), 5)
+                    pygame.draw.line(
+                        self.background, self.mod_color(color_val, "darker"),
+                        ((coords_list.x + 5), (coords_list.y - 5)),
+                        ((coords_list.x - 5), (coords_list.y + 5)), 5)
+
+                if zone.zone is ZoneType.PRIORITY:
+
+                    pygame.draw.polygon(
+                        self.background, self.mod_color(color_val, "lighter"),
+                        [((coords_list.x), (coords_list.y - 10)),
+
+                         (round(coords_list.x - (sin((1/5) * pi) * 4)),
+                          round(coords_list.y - (cos((1/5) * pi) * 4))),
+
+                         (round(coords_list.x - (sin((2/5) * pi) * 10)),
+                          round(coords_list.y - (cos((2/5) * pi) * 10))),
+
+                         (round(coords_list.x - (sin((3/5) * pi) * 4)),
+                          round(coords_list.y - (cos((3/5) * pi) * 4))),
+
+                         (round(coords_list.x - (sin((4/5) * pi) * 10)),
+                          round(coords_list.y - (cos((4/5) * pi) * 10))),
+
+                         (coords_list.x, round(coords_list.y + 4)),
+
+                         (round(coords_list.x + (sin((4/5) * pi) * 10)),
+                          round(coords_list.y - (cos((4/5) * pi) * 10))),
+
+                         (round(coords_list.x + (sin((3/5) * pi) * 4)),
+                          round(coords_list.y - (cos((3/5) * pi) * 4))),
+
+                         (round(coords_list.x + (sin((2/5) * pi) * 10)),
+                          round(coords_list.y - (cos((2/5) * pi) * 10))),
+
+                         (round(coords_list.x + (sin((1/5) * pi) * 4)),
+                          round(coords_list.y - (cos((1/5) * pi) * 4))),
+                         ])
+
+                    """
+                    # pygame.draw.polygon(
+                    #     self.background, self.mod_color(color_val, "darker"),
+                    #     [((coords_list.x), (coords_list.y - 5)),
+
+                    #      (round(coords_list.x - (sin((2/5) * pi) * 5)),
+                    #       round(coords_list.y - (cos((2/5) * pi) * 5))),
+
+                    #      (round(coords_list.x - (sin((4/5) * pi) * 5)),
+                    #       round(coords_list.y - (cos((4/5) * pi) * 5))),
+
+                    #      (round(coords_list.x + (sin((4/5) * pi) * 5)),
+                    #       round(coords_list.y - (cos((4/5) * pi) * 5))),
+
+                    #      (round(coords_list.x + (sin((2/5) * pi) * 5)),
+                    #       round(coords_list.y - (cos((2/5) * pi) * 5))),
+                    #      ])
+
+                    pygame.draw.circle(
+                        self.background, (0, 0, 0),
+                        ((coords_list.x), (coords_list.y - 5)),
+                        5, 0)
+
+                    pygame.draw.circle(
+                        self.background, (0, 0, 0),
+                        (round(coords_list.x - (sin((2/5) * pi) * 5)),
+                         round(coords_list.y - (cos((2/5) * pi) * 5))),
+                        5, 0)
+
+                    pygame.draw.circle(
+                        self.background, (255, 255, 255),
+                        (round(coords_list.x + (sin((2/5) * pi) * 5)),
+                         round(coords_list.y - (cos((2/5) * pi) * 5))),
+                        5, 0)
+
+                    pygame.draw.circle(
+                        self.background, (0, 0, 0),
+                        (round(coords_list.x - (sin((4/5) * pi) * 5)),
+                         round(coords_list.y - (cos((4/5) * pi) * 5))),
+                        5, 0)
+
+                    pygame.draw.circle(
+                        self.background, (255, 255, 255),
+                        (round(coords_list.x + (sin((4/5) * pi) * 5)),
+                         round(coords_list.y - (cos((4/5) * pi) * 5))),
+                        5, 0)
+                    """
+
+                if zone.hub_type is Hubs.START_HUB:
+                    pygame.draw.polygon(
+                        self.background, self.mod_color(color_val, "lighter"),
+                        [(round(coords_list.x - (cos((2/3) * pi) + 5)),
+                          round(coords_list.y - (sin((2/3) * pi) + 5))),
+                         (round(coords_list.x - (cos((2/3) * pi) + 5)),
+                          round(coords_list.y + (sin((2/3) * pi) + 5))),
+                         ((coords_list.x + 5), (coords_list.y))])
+
+                if zone.hub_type is Hubs.END_HUB:
+                    pygame.draw.polygon(
+                        self.background, self.mod_color(color_val, "darker"),
+                        [((coords_list.x + 4), (coords_list.y + 4)),
+                         ((coords_list.x + 4), (coords_list.y - 4)),
+                         ((coords_list.x - 4), (coords_list.y - 4)),
+                         ((coords_list.x - 4), (coords_list.y + 4))])
+
             text_offset = round(coords_list.y + (self.text_size) +
                                 ((zone.loc.x % 2) * (self.text_size * 0.75)))
             text_rect = text1.get_rect()
@@ -309,7 +535,7 @@ class WindowedVisualizer():
         # print("resize to:", w, h)
         self.build_map()
         self.update_display(turn, drone_locs)
-        # self.redraw()
+        pygame.display.update()
 
     def update_display(self, turn: int, drone_locs: list[Zone]) -> None:
 

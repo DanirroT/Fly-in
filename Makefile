@@ -6,7 +6,7 @@
 #    By: dmota-ri <dmota-ri@student.42lisboa.com    +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2026/04/10 16:50:27 by dmota-ri          #+#    #+#              #
-#    Updated: 2026/05/12 17:41:54 by dmota-ri         ###   ########.fr        #
+#    Updated: 2026/05/14 19:49:00 by dmota-ri         ###   ########.fr        #
 #                                                                              #
 # **************************************************************************** #
 
@@ -28,9 +28,9 @@ MAIN = main
 
 # MAP_FILE = maps/hard/01_maze_nightmare.txt
 # MAP_FILE = maps/hard/02_capacity_hell.txt
-MAP_FILE = maps/hard/03_ultimate_challenge.txt
+# MAP_FILE = maps/hard/03_ultimate_challenge.txt
 
-# MAP_FILE = maps/challenger/01_the_impossible_dream.txt
+MAP_FILE = maps/challenger/01_the_impossible_dream.txt
 
 OBJ = **.py *.py
 
@@ -46,20 +46,42 @@ run:
 	$(PYTHON) $(MAIN) $(MAP_FILE)
 
 test_all:
+	@echo Easy
+	@echo "linear path"
+	$(PYTHON) $(MAIN) maps/easy/01_linear_path.txt
+	@echo "simple fork"
+	$(PYTHON) $(MAIN) maps/easy/02_simple_fork.txt
+	@echo "basic capacity"
+	$(PYTHON) $(MAIN) maps/easy/03_basic_capacity.txt
 
-# 	$(PYTHON) $(MAIN) maps/easy/01_linear_path.txt
-	$(PYTHON) $(MAIN) maps/easy/02_simple_fork.txt  # should split drones
-# 	$(PYTHON) $(MAIN) maps/easy/03_basic_capacity.txt
+	$(PYTHON) $(MAIN) maps/easy/02_simple_fork_copy.txt
+	$(PYTHON) $(MAIN) maps/easy/03_basic_capacity_copy.txt
 
-# 	$(PYTHON) $(MAIN) maps/medium/01_dead_end_trap.txt
-	$(PYTHON) $(MAIN) maps/medium/02_circular_loop.txt  # Restricted area Error
-# 	$(PYTHON) $(MAIN) maps/medium/03_priority_puzzle.txt
+	@echo
+	@echo Medium
+	@echo "dead end trap"
+	$(PYTHON) $(MAIN) maps/medium/01_dead_end_trap.txt
+	@echo "circular loop"
+	$(PYTHON) $(MAIN) maps/medium/02_circular_loop.txt
+	@echo "priority puzzle"
+	$(PYTHON) $(MAIN) maps/medium/03_priority_puzzle.txt
 
-	$(PYTHON) $(MAIN) maps/hard/01_maze_nightmare.txt  # inverted map??
-# 	$(PYTHON) $(MAIN) maps/hard/02_capacity_hell.txt
-	$(PYTHON) $(MAIN) maps/hard/03_ultimate_challenge.txt  # complete disaster, going to restricted for no reason especially when priority is available
+	@echo
+	@echo Hard
+	@echo "maze nightmare"
+	$(PYTHON) $(MAIN) maps/hard/01_maze_nightmare.txt  # map Error??
+	@echo "capacity hell"
+	$(PYTHON) $(MAIN) maps/hard/02_capacity_hell.txt
+	@echo "ultimate challenge"
+	$(PYTHON) $(MAIN) maps/hard/03_ultimate_challenge.txt
 
+	@echo
+	@echo Challenger
+	@echo "the impossible dream"
 	$(PYTHON) $(MAIN) maps/challenger/01_the_impossible_dream.txt
+
+	@echo
+	@echo "All Tests Done"
 
 debug:
 	$(DEBUGGER) $(MAIN).py $(MAP_FILE)
