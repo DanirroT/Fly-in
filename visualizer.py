@@ -110,21 +110,17 @@ class WindowedVisualizer():
             )
         self.build_map()
 
-        print(self.drone_map.nb_drones)
+        # print(self.drone_map.nb_drones)
 
         if self.drone_map.nb_drones >= 25:
-            print(25)
             drone_size = (20, 20)
         elif self.drone_map.nb_drones >= 10:
-            print(10)
             drone_size = (30, 30)
 
         elif self.drone_map.nb_drones >= 5:
-            print(5)
             drone_size = (40, 40)
 
         else:
-            print("less")
             drone_size = (50, 50)
 
         self.drone_png = pygame.image.load('drone.png')
@@ -163,23 +159,33 @@ class WindowedVisualizer():
 
     @staticmethod
     def mod_color(color: tuple[int, int, int],
-                  mod: Literal["darker"] | Literal["lighter"]
+                  factor: float
                   ) -> tuple[int, int, int]:
 
-        if mod == "darker":
-            return tuple(
-                max(0, min(255, int(c * 0.7)))
-                for c in color
-            )
+                return tuple(
+                    min(255, max(0, int(c * factor)))
+                    for c in color
+                )
 
-        elif mod == "lighter":
-            return tuple(
-                min(255, max(0, int(c + (255 - c) * 0.7)))
-                for c in color
-            )
+    # @staticmethod
+    # def mod_color(color: tuple[int, int, int],
+    #               mod: Literal["darker"] | Literal["lighter"]
+    #               ) -> tuple[int, int, int]:
 
-        else:
-            raise ValueError(f"Mod Value not valid: {mod}")
+    #     if mod == "darker":
+    #         return tuple(
+    #             max(0, min(255, int(c * 0.7)))
+    #             for c in color
+    #         )
+
+    #     elif mod == "lighter":
+    #         return tuple(
+    #             min(255, max(0, int(c + (255 - c) * 0.7)))
+    #             for c in color
+    #         )
+
+    #     else:
+    #         raise ValueError(f"Mod Value not valid: {mod}")
 
     def build_map(self) -> None:
         self.screen = pygame.display.set_mode(self.dimensions,
@@ -299,28 +305,28 @@ class WindowedVisualizer():
 
                 if zone.zone is ZoneType.BLOCKED:
                     pygame.draw.line(
-                        self.background, self.mod_color(grey, "darker"),
+                        self.background, self.mod_color(grey, 0.7),
                         ((coords_list.x + 20), (coords_list.y + 20)),
                         ((coords_list.x - 20), (coords_list.y - 20)), 8)
                     pygame.draw.line(
-                        self.background, self.mod_color(grey, "darker"),
+                        self.background, self.mod_color(grey, 0.7),
                         ((coords_list.x + 20), (coords_list.y - 20)),
                         ((coords_list.x - 20), (coords_list.y + 20)), 8)
 
                 if zone.zone is ZoneType.RESTRICTED:
                     pygame.draw.line(
-                        self.background, self.mod_color(grey, "darker"),
+                        self.background, self.mod_color(grey, 0.7),
                         ((coords_list.x + 5), (coords_list.y + 5)),
                         ((coords_list.x - 5), (coords_list.y - 5)), 5)
                     pygame.draw.line(
-                        self.background, self.mod_color(grey, "darker"),
+                        self.background, self.mod_color(grey, 0.7),
                         ((coords_list.x + 5), (coords_list.y - 5)),
                         ((coords_list.x - 5), (coords_list.y + 5)), 5)
 
                 if zone.zone is ZoneType.PRIORITY:
 
                     pygame.draw.polygon(
-                        self.background, self.mod_color(grey, "lighter"),
+                        self.background, self.mod_color(grey, 1.7),
                         [((coords_list.x), (coords_list.y - 10)),
 
                          (round(coords_list.x - (sin((1/5) * pi) * 4)),
@@ -352,7 +358,7 @@ class WindowedVisualizer():
 
                 if zone.hub_type is Hubs.START_HUB:
                     pygame.draw.polygon(
-                        self.background, self.mod_color(grey, "lighter"),
+                        self.background, self.mod_color(grey, 1.7),
                         [(round(coords_list.x - (cos((2/3) * pi) + 5)),
                           round(coords_list.y - (sin((2/3) * pi) + 5))),
                          (round(coords_list.x - (cos((2/3) * pi) + 5)),
@@ -361,7 +367,7 @@ class WindowedVisualizer():
 
                 if zone.hub_type is Hubs.END_HUB:
                     pygame.draw.polygon(
-                        self.background, self.mod_color(grey, "darker"),
+                        self.background, self.mod_color(grey, 0.7),
                         [((coords_list.x + 4), (coords_list.y + 4)),
                          ((coords_list.x + 4), (coords_list.y - 4)),
                          ((coords_list.x - 4), (coords_list.y - 4)),
@@ -381,28 +387,28 @@ class WindowedVisualizer():
 
                 if zone.zone is ZoneType.BLOCKED:
                     pygame.draw.line(
-                        self.background, self.mod_color(color_val, "darker"),
+                        self.background, self.mod_color(color_val, 0.7),
                         ((coords_list.x + 20), (coords_list.y + 20)),
                         ((coords_list.x - 20), (coords_list.y - 20)), 8)
                     pygame.draw.line(
-                        self.background, self.mod_color(color_val, "darker"),
+                        self.background, self.mod_color(color_val, 0.7),
                         ((coords_list.x + 20), (coords_list.y - 20)),
                         ((coords_list.x - 20), (coords_list.y + 20)), 8)
 
                 if zone.zone is ZoneType.RESTRICTED:
                     pygame.draw.line(
-                        self.background, self.mod_color(color_val, "darker"),
+                        self.background, self.mod_color(color_val, 0.7),
                         ((coords_list.x + 5), (coords_list.y + 5)),
                         ((coords_list.x - 5), (coords_list.y - 5)), 5)
                     pygame.draw.line(
-                        self.background, self.mod_color(color_val, "darker"),
+                        self.background, self.mod_color(color_val, 0.7),
                         ((coords_list.x + 5), (coords_list.y - 5)),
                         ((coords_list.x - 5), (coords_list.y + 5)), 5)
 
                 if zone.zone is ZoneType.PRIORITY:
 
                     pygame.draw.polygon(
-                        self.background, self.mod_color(color_val, "lighter"),
+                        self.background, self.mod_color(color_val, 1.7),
                         [((coords_list.x), (coords_list.y - 10)),
 
                          (round(coords_list.x - (sin((1/5) * pi) * 4)),
@@ -434,7 +440,7 @@ class WindowedVisualizer():
 
                     """
                     # pygame.draw.polygon(
-                    #     self.background, self.mod_color(color_val, "darker"),
+                    #     self.background, self.mod_color(color_val, 0.7),
                     #     [((coords_list.x), (coords_list.y - 5)),
 
                     #      (round(coords_list.x - (sin((2/5) * pi) * 5)),
@@ -482,7 +488,7 @@ class WindowedVisualizer():
 
                 if zone.hub_type is Hubs.START_HUB:
                     pygame.draw.polygon(
-                        self.background, self.mod_color(color_val, "lighter"),
+                        self.background, self.mod_color(color_val, 1.7),
                         [(round(coords_list.x - (cos((2/3) * pi) + 5)),
                           round(coords_list.y - (sin((2/3) * pi) + 5))),
                          (round(coords_list.x - (cos((2/3) * pi) + 5)),
@@ -491,7 +497,7 @@ class WindowedVisualizer():
 
                 if zone.hub_type is Hubs.END_HUB:
                     pygame.draw.polygon(
-                        self.background, self.mod_color(color_val, "darker"),
+                        self.background, self.mod_color(color_val, 0.7),
                         [((coords_list.x + 4), (coords_list.y + 4)),
                          ((coords_list.x + 4), (coords_list.y - 4)),
                          ((coords_list.x - 4), (coords_list.y - 4)),

@@ -53,7 +53,7 @@ def main(args: list[str]) -> None:
     manager = DroneManager(drone_map, WindowedVisualizer)
 
     manager.run_program()
-    print("END SIM")
+    # print("END SIM")
 
 
 if __name__ == "__main__":

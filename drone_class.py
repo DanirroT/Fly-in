@@ -454,7 +454,7 @@ class DroneManager():
 
     def run_program(self) -> None:
         import pygame
-        print("Start Sim")
+        # print("Start Sim")
         # self.visualizer.screen.blit(self.visualizer.background, (0, 0))
 
         # input()
@@ -519,28 +519,28 @@ class DroneManager():
                         self.turn -= 1
                         self.visualizer.update_display(
                             self.turn, turn_list_output[self.turn])
-                        print()
-                        print("Turn backward -", self.turn)
+                        # print()
+                        # print("Turn backward -", self.turn)
                     if (event.key == pygame.K_RIGHT and
                             turns > self.turn + 1):
 
                         self.turn += 1
                         self.visualizer.update_display(
                             self.turn, turn_list_output[self.turn])
-                        print()
-                        print("Turn forward -", self.turn)
+                        # print()
+                        # print("Turn forward -", self.turn)
                     if (event.key == pygame.K_BACKSPACE):
                         self.turn = 0
                         self.visualizer.update_display(
                             self.turn, turn_list_output[self.turn])
-                        print()
-                        print("Back to start -", self.turn)
+                        # print()
+                        # print("Back to start -", self.turn)
                     if (event.key == pygame.K_RETURN):
                         self.turn = turns - 1
                         self.visualizer.update_display(
                             self.turn, turn_list_output[self.turn])
-                        print()
-                        print("End of Sim -", self.turn)
+                        # print()
+                        # print("End of Sim -", self.turn)
 
                 if event.type == pygame.VIDEORESIZE:
                     # print("VIDEORESIZE", event.w, event.h)
@@ -552,10 +552,9 @@ class DroneManager():
                     self.visualizer.resize(event.x, event.y, self.turn,
                                            turn_list_output[self.turn])
 
-        print("Quit")
-
-        print()
-        print()
+        # print("Quit")
+        # print()
+        # print()
         self.visualizer.terminate()
 
     """
